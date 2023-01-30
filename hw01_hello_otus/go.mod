@@ -1,4 +1,4 @@
-module github.com/adrevin/ogdphw
+module github.com/adrevin/ogdphw/hw01_hello_otus
 
 go 1.19
 
