@@ -39,6 +39,7 @@ func TestUnpack2(t *testing.T) {
 		expected string
 	}{
 		{input: "Длин2оше3", expected: "Длинношеее"},
+		{input: "Длин2оше2е", expected: "Длинношеее"},
 	}
 
 	for _, tc := range tests {
