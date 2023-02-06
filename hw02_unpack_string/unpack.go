@@ -2,7 +2,6 @@ package hw02unpackstring
 
 import (
 	"errors"
-	"strconv"
 	"strings"
 )
 
@@ -16,9 +15,8 @@ func Unpack(inp string) (string, error) {
 			if char == "" { // it is no previous non digit char
 				return "", ErrInvalidString
 			}
-			r, _ := strconv.Atoi(string(c))              // get repeats number
-			builder.WriteString(strings.Repeat(char, r)) // repeat previous char
-			char = ""                                    // reset repeated char
+			builder.WriteString(strings.Repeat(char, int(c-48))) // repeat previous char
+			char = ""                                            // reset repeated char
 		} else {
 			builder.WriteString(char) // it is previous non digit char. just use it to output
 			char = string(c)          // remember char as previous
