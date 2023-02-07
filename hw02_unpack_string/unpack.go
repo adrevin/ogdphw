@@ -8,9 +8,8 @@ import (
 var ErrInvalidString = errors.New("invalid string")
 
 func Unpack(inp string) (string, error) {
-
 	var builder strings.Builder
-	var char *rune = nil
+	var char *rune
 
 	for _, c := range inp {
 		// it is a digit: 48 - "0", 49 - "1", 57 - "9"
