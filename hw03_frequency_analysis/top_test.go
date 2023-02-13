@@ -43,6 +43,42 @@ var text = `Как видите, он  спускается  по  лестни�
 	посидеть у огня и послушать какую-нибудь интересную сказку.
 		В этот вечер...`
 
+var text2 = `	HERE is Edward Bear, coming downstairs now, bump, bump, bump, on the back of his head,
+	behind Christopher Robin.
+		
+		It is, as far as he knows, the only way of coming downstairs, but sometimes he feels that there really is another
+	way, if only he could stop bumping for a moment and think of it.
+
+		And then he feels that perhaps there isn't.
+
+		Anyhow, here he is at the bottom, and ready to be introduced to you.
+
+		Winnie-the-Pooh.
+
+		When I first heard his name, I said, just as you are going to say,
+
+		"But I thought he was a boy"
+
+		"So did I," said Christopher Robin.
+
+		"Then you can't call him Winnie?"
+
+		"I don't."
+	
+		"But you said -- "
+	
+		"He's Winnie-the-Pooh.
+
+		Don't you know what 'ther' means?"
+	
+		"Ah, yes, now I do," I said quickly; and I hope you do too, because it is all the explanation you are
+    going to get.
+	
+		Sometimes Winnie-the-Pooh likes a game of some sort when he comes downstairs, and sometimes he likes to sit
+	quietly	in front of the fire and listen to a story.
+	
+	This evening --`
+
 func TestTop10(t *testing.T) {
 	t.Run("no words in empty string", func(t *testing.T) {
 		require.Len(t, Top10(""), 0)
@@ -78,5 +114,21 @@ func TestTop10(t *testing.T) {
 			}
 			require.Equal(t, expected, Top10(text))
 		}
+	})
+
+	t.Run("positive test", func(t *testing.T) {
+		expected := []string{
+			"he",  // 8
+			"I",   // 6
+			"to",  // 6
+			"you", // 6
+			"and", // 5
+			"of",  // 5
+			"the", // 5
+			"a",   // 4
+			"is",  // 4
+			"as",  // 3
+		}
+		require.Equal(t, expected, Top10(text2))
 	})
 }
