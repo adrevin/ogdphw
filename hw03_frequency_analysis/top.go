@@ -46,9 +46,8 @@ func Top10(text string) []string {
 	})
 
 	outSize := 10
-	frequenciesCount := len(frequencies)
-	if outSize > frequenciesCount {
-		outSize = frequenciesCount
+	if outSize > len(frequencies) {
+		outSize = len(frequencies)
 	}
 
 	top := make([]string, outSize)
