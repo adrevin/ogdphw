@@ -22,18 +22,12 @@ func Top10(text string) []string {
 	wordsMap := make(map[string]int)
 
 	for _, word := range words {
-		if _, ok := wordsMap[word]; !ok {
-			wordsMap[word] = 1
-		} else {
-			wordsMap[word]++
-		}
+		wordsMap[word]++
 	}
 
-	frequencies := make([]wordFrequency, len(wordsMap))
-	frequencyIndex := 0
+	frequencies := make([]wordFrequency, 0, len(wordsMap))
 	for key, val := range wordsMap {
-		frequencies[frequencyIndex] = newWordFrequency(key, val)
-		frequencyIndex++
+		frequencies = append(frequencies, newWordFrequency(key, val))
 	}
 
 	sort.Slice(frequencies, func(i, j int) bool {
