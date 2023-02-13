@@ -17,23 +17,23 @@ func newWordFrequency(word string, count int) wordFrequency {
 	}
 }
 
-func Top10(inp string) []string {
+func Top10(text string) []string {
+	words := strings.Fields(text)
+	wordsMap := make(map[string]int)
 
-	words := strings.Fields(inp)
-	var wordsMap = make(map[string]int)
 	for _, word := range words {
-		if _, ok := wordsMap[word]; ok {
-			wordsMap[word]++
-		} else {
+		if _, ok := wordsMap[word]; !ok {
 			wordsMap[word] = 1
+		} else {
+			wordsMap[word]++
 		}
 	}
 
-	var frequencies = make([]wordFrequency, len(wordsMap))
-	i := 0
+	frequencies := make([]wordFrequency, len(wordsMap))
+	frequencyIndex := 0
 	for key, val := range wordsMap {
-		frequencies[i] = newWordFrequency(key, val)
-		i++
+		frequencies[frequencyIndex] = newWordFrequency(key, val)
+		frequencyIndex++
 	}
 
 	sort.Slice(frequencies, func(i, j int) bool {
@@ -45,16 +45,15 @@ func Top10(inp string) []string {
 		return a.count > b.count
 	})
 
-	var outSize = 10
-	var frequenciesCount = len(frequencies)
+	outSize := 10
+	frequenciesCount := len(frequencies)
 	if outSize > frequenciesCount {
 		outSize = frequenciesCount
 	}
 
-	out := make([]string, outSize)
+	top := make([]string, outSize)
 	for i := 0; i < outSize; i++ {
-		out[i] = frequencies[i].word
+		top[i] = frequencies[i].word
 	}
-
-	return out
+	return top
 }
