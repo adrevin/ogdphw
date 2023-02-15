@@ -5,48 +5,32 @@ import (
 	"strings"
 )
 
-type wordFrequency struct {
-	word  string
-	count int
-}
-
-func newWordFrequency(word string, count int) wordFrequency {
-	return wordFrequency{
-		word:  word,
-		count: count,
-	}
-}
-
 func Top10(text string) []string {
 	words := strings.Fields(text)
-	wordsMap := make(map[string]int)
+	wordsCounts := make(map[string]int)
 
 	for _, word := range words {
-		wordsMap[word]++
+		wordsCounts[word]++
 	}
 
-	frequencies := make([]wordFrequency, 0, len(wordsMap))
-	for key, val := range wordsMap {
-		frequencies = append(frequencies, newWordFrequency(key, val))
+	sortedWords := make([]string, 0, len(wordsCounts))
+
+	for word := range wordsCounts {
+		sortedWords = append(sortedWords, word)
 	}
 
-	sort.Slice(frequencies, func(i, j int) bool {
-		a := frequencies[i]
-		b := frequencies[j]
-		if a.count == b.count {
-			return a.word < b.word
+	sort.Slice(sortedWords, func(i, j int) bool {
+		a := sortedWords[i]
+		b := sortedWords[j]
+		if wordsCounts[a] == wordsCounts[b] {
+			return a < b
 		}
-		return a.count > b.count
+		return wordsCounts[a] > wordsCounts[b]
 	})
 
 	outSize := 10
-	if outSize > len(frequencies) {
-		outSize = len(frequencies)
+	if outSize > len(sortedWords) {
+		outSize = len(sortedWords)
 	}
-
-	top := make([]string, outSize)
-	for i := 0; i < outSize; i++ {
-		top[i] = frequencies[i].word
-	}
-	return top
+	return sortedWords[:outSize]
 }
