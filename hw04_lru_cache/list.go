@@ -27,7 +27,6 @@ func NewList() List {
 }
 
 func (l *list) PushFront(v interface{}) *ListItem {
-
 	next := l.front
 	if next == nil {
 		next = l.back
@@ -53,7 +52,6 @@ func (l *list) PushFront(v interface{}) *ListItem {
 }
 
 func (l *list) PushBack(v interface{}) *ListItem {
-
 	prev := l.back
 	if prev == nil {
 		prev = l.front
@@ -79,7 +77,6 @@ func (l *list) PushBack(v interface{}) *ListItem {
 }
 
 func (l *list) Remove(i *ListItem) {
-
 	if i == nil {
 		panic("null ListItem value of received")
 	}
@@ -113,11 +110,9 @@ func (l *list) Remove(i *ListItem) {
 	i.Next.Prev = i.Prev
 	i.Prev.Next = i.Next
 	l.len--
-	return
 }
 
 func (l *list) MoveToFront(i *ListItem) {
-
 	if i == nil {
 		panic("null ListItem value of received")
 	}
