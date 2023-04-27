@@ -92,7 +92,6 @@ func TestList(t *testing.T) {
 		l.PushFront(10)
 		l.Remove(l.Back())
 		require.Nil(t, l.Back().Next)
-
 	})
 
 	t.Run("push", func(t *testing.T) {
