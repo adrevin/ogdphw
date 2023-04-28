@@ -50,7 +50,43 @@ func TestCache(t *testing.T) {
 	})
 
 	t.Run("purge logic", func(t *testing.T) {
-		// Write me
+		// логика выталкивания элементов из-за размера очереди
+		// (например: n = 3, добавили 4 элемента - 1й из кэша вытолкнулся);
+		c := NewCache(3)
+		c.Set("first", 1)
+		c.Set("second", 2)
+		c.Set("third", 3)
+		c.Set("fourth", 4)
+
+		_, ok := c.Get("fourth")
+		require.Equal(t, true, ok)
+
+		_, ok = c.Get("third")
+		require.Equal(t, true, ok)
+
+		_, ok = c.Get("second")
+		require.Equal(t, true, ok)
+
+		_, ok = c.Get("first")
+		require.Equal(t, false, ok)
+
+		// логика выталкивания давно используемых элементов
+		// (например: n = 3, добавили 3 элемента, обратились несколько раз к разным элементам: изменили значение,
+		// получили значение и пр. - добавили 4й элемент, из первой тройки
+		// вытолкнется тот элемент, что был затронут наиболее давно).
+
+		for i := 0; i < 10; i++ {
+			if i%2 == 0 {
+				_, _ = c.Get("third")
+			} else {
+				_, _ = c.Get("second")
+			}
+		}
+
+		c.Set("first", 1)
+
+		_, ok = c.Get("fourth")
+		require.Equal(t, false, ok)
 	})
 }
 
