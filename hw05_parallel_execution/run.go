@@ -16,6 +16,7 @@ type handler struct {
 	errorsNumber    int32
 	wg              sync.WaitGroup
 	maxErrorsNumber int32
+	tasks           *[]Task
 }
 
 func Run(tasks []Task, n, m int) error {
@@ -23,15 +24,18 @@ func Run(tasks []Task, n, m int) error {
 		taskIndex:       -1,
 		maxTaskIndex:    int32(len(tasks) - 1),
 		errorsNumber:    0,
+		wg:              sync.WaitGroup{},
 		maxErrorsNumber: int32(m),
+		tasks:           &tasks,
 	}
 
 	for i := 0; i < n; i++ {
 		h.wg.Add(1)
-		go work(&tasks, h)
+		go work(h)
 	}
 
 	h.wg.Wait()
+
 	// Значение m <= 0 трактуется как знак игнорировать ошибки в принципе
 	if m <= 0 {
 		return nil
@@ -43,17 +47,17 @@ func Run(tasks []Task, n, m int) error {
 	return nil
 }
 
-func work(tasks *[]Task, h *handler) {
+func work(h *handler) {
 	defer h.wg.Done()
 	for {
 		index := atomic.AddInt32(&h.taskIndex, 1)
 		if index > h.maxTaskIndex {
 			return
 		}
-		if h.maxErrorsNumber > 0 && h.errorsNumber >= h.maxErrorsNumber {
+		if h.maxErrorsNumber > 0 && atomic.LoadInt32(&h.errorsNumber) >= h.maxErrorsNumber {
 			return
 		}
-		if (*tasks)[index]() != nil {
+		if (*h.tasks)[index]() != nil {
 			atomic.AddInt32(&h.errorsNumber, 1)
 		}
 	}
