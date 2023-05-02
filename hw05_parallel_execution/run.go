@@ -24,7 +24,6 @@ func Run(tasks []Task, n, m int) error {
 		taskIndex:       -1,
 		maxTaskIndex:    int32(len(tasks) - 1),
 		errorsNumber:    0,
-		wg:              sync.WaitGroup{},
 		maxErrorsNumber: int32(m),
 		tasks:           &tasks,
 	}
