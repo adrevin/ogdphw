@@ -32,6 +32,11 @@ func Run(tasks []Task, n, m int) error {
 	}
 
 	h.wg.Wait()
+	// Значение m <= 0 трактуется как знак игнорировать ошибки в принципе
+	if m <= 0 {
+		return nil
+	}
+
 	if h.errorsNumber >= h.maxErrorsNumber {
 		return ErrErrorsLimitExceeded
 	}
@@ -42,7 +47,10 @@ func work(tasks *[]Task, h *handler) {
 	defer h.wg.Done()
 	for {
 		index := atomic.AddInt32(&h.taskIndex, 1)
-		if (index > h.maxTaskIndex) || (h.errorsNumber >= h.maxErrorsNumber) {
+		if index > h.maxTaskIndex {
+			return
+		}
+		if h.maxErrorsNumber > 0 && h.errorsNumber >= h.maxErrorsNumber {
 			return
 		}
 		if (*tasks)[index]() != nil {
