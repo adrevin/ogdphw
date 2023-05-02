@@ -88,6 +88,6 @@ func TestRun(t *testing.T) {
 		err := Run(tasks, workersCount, maxErrorsCount)
 
 		require.Nil(t, err, "error returned")
-		require.Equal(t, runTasksCount, int32(tasksCount), "extra tasks were started")
+		require.Equal(t, runTasksCount, int32(tasksCount), "not all tasks were completed")
 	})
 }
