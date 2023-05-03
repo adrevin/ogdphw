@@ -13,6 +13,12 @@ type handler struct {
 }
 
 func ExecutePipeline(in In, done In, stages ...Stage) Out {
+	if in == nil {
+		panic("in is nil")
+	}
+	if stages == nil {
+		panic("stages is nil")
+	}
 	h := &handler{out: chanProxy(in, done)}
 	for _, stage := range stages {
 		h.out = chanProxy(stage(h.out), done)
