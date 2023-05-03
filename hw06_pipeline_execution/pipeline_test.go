@@ -91,7 +91,7 @@ func TestPipeline(t *testing.T) {
 		require.Less(t, int64(elapsed), int64(abortDur)+int64(fault))
 	})
 
-	/*	t.Run("empty case", func(t *testing.T) {
+	t.Run("empty case", func(t *testing.T) {
 		in := make(Bi)
 		data := []int{1, 2, 3, 4, 5}
 		go func() {
@@ -112,5 +112,5 @@ func TestPipeline(t *testing.T) {
 		require.Less(t,
 			int64(elapsed),
 			int64(sleepPerStage)*int64(len(stages)-1)+int64(fault))
-	})*/
+	})
 }
