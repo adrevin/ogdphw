@@ -20,6 +20,10 @@ type handler struct {
 }
 
 func Run(tasks []Task, n, m int) error {
+	if n <= 0 {
+		panic("n must be greater than 0")
+	}
+
 	h := &handler{
 		taskIndex:       -1,
 		maxTaskIndex:    int32(len(tasks) - 1),
