@@ -8,12 +8,16 @@ type (
 
 type Stage func(in In) (out Out)
 
+type handler struct {
+	out Out
+}
+
 func ExecutePipeline(in In, done In, stages ...Stage) Out {
-	p := chanProxy(in, done)
+	h := &handler{out: chanProxy(in, done)}
 	for _, stage := range stages {
-		p = chanProxy(stage(p), done)
+		h.out = chanProxy(stage(h.out), done)
 	}
-	return p
+	return h.out
 }
 
 func chanProxy(in In, done In) Out {
