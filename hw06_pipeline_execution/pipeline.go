@@ -9,9 +9,26 @@ type (
 type Stage func(in In) (out Out)
 
 func ExecutePipeline(in In, done In, stages ...Stage) Out {
-	c := in
+	p := chanProxy(in, done)
 	for _, stage := range stages {
-		c = stage(c)
+		p = chanProxy(stage(p), done)
 	}
-	return c
+	return p
+}
+
+func chanProxy(in In, done In) Out {
+	out := make(Bi)
+	go func() {
+		for v := range in {
+			select {
+			case <-done:
+				close(out)
+				return
+			default:
+				out <- v
+			}
+		}
+		close(out)
+	}()
+	return out
 }
