@@ -29,16 +29,20 @@ func ExecutePipeline(in In, done In, stages ...Stage) Out {
 func chanProxy(in In, done In) Out {
 	out := make(Bi)
 	go func() {
-		for v := range in {
+		for {
 			select {
 			case <-done:
 				close(out)
 				return
-			default:
-				out <- v
+			case v, ok := <-in:
+				if ok {
+					out <- v
+				} else {
+					close(out)
+					return
+				}
 			}
 		}
-		close(out)
 	}()
 	return out
 }
