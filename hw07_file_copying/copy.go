@@ -40,10 +40,7 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 		count = limit
 	}
 
-	bar := progressbar.DefaultBytes(
-		count,
-		from.Name(),
-	)
+	bar := progressbar.DefaultBytes(count)
 	_, err = io.CopyN(io.MultiWriter(to, bar), from, count)
 	if err != nil {
 		return err
