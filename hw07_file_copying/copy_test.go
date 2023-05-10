@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"os"
+	"os/exec"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -126,5 +127,13 @@ func TestCopy(t *testing.T) {
 
 		_ = os.Remove(src.Name())
 		_ = os.Remove(dstName)
+	})
+
+	t.Run("from test.sh", func(t *testing.T) {
+		err := Copy("testdata/input.txt", "out.txt", 0, 0)
+		require.Nil(t, err)
+		cmd := exec.Command("cmp", "out.txt", "testdata/out_offset0_limit0.txt")
+		err = cmd.Run()
+		require.Nil(t, err)
 	})
 }

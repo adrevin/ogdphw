@@ -36,7 +36,7 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 	}
 
 	count := fromStat.Size() - offset
-	if count > limit {
+	if limit > 0 && count > limit {
 		count = limit
 	}
 
@@ -45,7 +45,11 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 		from.Name(),
 	)
 	_, err = io.CopyN(io.MultiWriter(to, bar), from, count)
+	if err != nil {
+		return err
+	}
 
+	err = to.Close()
 	if err != nil {
 		return err
 	}
