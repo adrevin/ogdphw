@@ -4,6 +4,8 @@ import (
 	"errors"
 	"io"
 	"os"
+
+	"github.com/schollz/progressbar/v3"
 )
 
 var (
@@ -24,24 +26,6 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 		return ErrOffsetExceedsFileSize
 	}
 
-	// simplest io.Copy
-	if offset == 0 && limit >= fromStat.Size() {
-		to, err := os.Create(toPath)
-		if err != nil {
-			return err
-		}
-		_, err = io.Copy(to, from)
-		if err != nil {
-			return err
-		}
-		err = to.Close()
-		if err != nil {
-			return err
-		}
-		return nil
-	}
-
-	// with offset/limit via buffer
 	to, err := os.Create(toPath)
 	if err != nil {
 		return err
@@ -51,29 +35,17 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 		return err
 	}
 
-	buf := make([]byte, 3)
-	var copied int64
-	for copied < limit {
-		n, err := from.Read(buf)
-		if err != nil && err != io.EOF {
-			return err
-		}
-		if n == 0 {
-			break
-		}
-
-		w := limit - copied
-		if w > int64(n) {
-			w = int64(n)
-		}
-
-		if _, err := to.Write(buf[:w]); err != nil {
-			return err
-		}
-
-		copied += int64(n)
+	count := fromStat.Size() - offset
+	if count > limit {
+		count = limit
 	}
-	err = to.Close()
+
+	bar := progressbar.DefaultBytes(
+		count,
+		from.Name(),
+	)
+	_, err = io.CopyN(io.MultiWriter(to, bar), from, count)
+
 	if err != nil {
 		return err
 	}

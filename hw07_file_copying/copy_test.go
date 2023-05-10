@@ -63,14 +63,14 @@ func TestCopy(t *testing.T) {
 
 		dstStat, err := dst.Stat()
 		require.Nil(t, err)
-		require.Equal(t, dstStat.Size(), int64(256))
+		require.Equal(t, int64(256), dstStat.Size())
 
 		dstBytes := make([]byte, 256)
 
 		n, err := dst.Read(dstBytes)
 		require.Nil(t, err)
-		require.Equal(t, n, 256)
-		require.Equal(t, dstBytes, bytes)
+		require.Equal(t, 256, n)
+		require.Equal(t, bytes, dstBytes)
 
 		_ = os.Remove(src.Name())
 		_ = os.Remove(dstName)
@@ -89,14 +89,14 @@ func TestCopy(t *testing.T) {
 
 		dstStat, err := dst.Stat()
 		require.Nil(t, err)
-		require.Equal(t, dstStat.Size(), int64(128))
+		require.Equal(t, int64(128), dstStat.Size())
 
 		dstBytes := make([]byte, 128)
 
 		n, err := dst.Read(dstBytes)
 		require.Nil(t, err)
-		require.Equal(t, n, 128)
-		require.Equal(t, dstBytes, bytes[128:256])
+		require.Equal(t, 128, n)
+		require.Equal(t, bytes[128:256], dstBytes)
 
 		_ = os.Remove(src.Name())
 		_ = os.Remove(dstName)
@@ -115,14 +115,14 @@ func TestCopy(t *testing.T) {
 
 		dstStat, err := dst.Stat()
 		require.Nil(t, err)
-		require.Equal(t, dstStat.Size(), int64(10))
+		require.Equal(t, int64(10), dstStat.Size())
 
 		dstBytes := make([]byte, 10)
 
 		n, err := dst.Read(dstBytes)
 		require.Nil(t, err)
-		require.Equal(t, n, 10)
-		require.Equal(t, dstBytes, bytes[48:58])
+		require.Equal(t, 10, n)
+		require.Equal(t, bytes[48:58], dstBytes)
 
 		_ = os.Remove(src.Name())
 		_ = os.Remove(dstName)
