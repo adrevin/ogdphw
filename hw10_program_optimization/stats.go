@@ -22,12 +22,16 @@ func GetDomainStat(r io.Reader, domain string) (DomainStat, error) {
 	reader := bufio.NewReader(r)
 
 	for {
-		line, _, err := reader.ReadLine()
+		line, isPrefix, err := reader.ReadLine()
 		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
 			return nil, err
+		}
+
+		if isPrefix {
+			continue
 		}
 
 		if err = json.Unmarshal(line, &user); err != nil {
