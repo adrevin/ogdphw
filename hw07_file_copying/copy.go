@@ -37,7 +37,7 @@ func Copy(fromPath, toPath string, offset, limit int64) error {
 	if err != nil {
 		return err
 	}
-	_, err = from.Seek(offset, 0)
+	_, err = from.Seek(offset, io.SeekStart)
 	if err != nil {
 		return err
 	}
