@@ -136,4 +136,9 @@ func TestCopy(t *testing.T) {
 		err = cmd.Run()
 		require.Nil(t, err)
 	})
+
+	t.Run("same file", func(t *testing.T) {
+		err := Copy("testdata/input.txt", "testdata/../testdata/input.txt", 0, 0)
+		require.Truef(t, errors.Is(err, ErrUnsupportedFile), "actual err - %v", err)
+	})
 }

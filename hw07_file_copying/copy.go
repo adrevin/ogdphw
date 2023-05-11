@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/schollz/progressbar/v3"
 )
@@ -14,6 +15,12 @@ var (
 )
 
 func Copy(fromPath, toPath string, offset, limit int64) error {
+	fromFp := filepath.Base(fromPath)
+	toFp := filepath.Base(toPath)
+	if fromFp == toFp {
+		return ErrUnsupportedFile
+	}
+
 	from, err := os.Open(fromPath)
 	if err != nil {
 		return ErrUnsupportedFile
