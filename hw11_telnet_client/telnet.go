@@ -62,9 +62,5 @@ func (client *telnetClient) Receive() error {
 }
 
 func (client *telnetClient) Close() error {
-	err := client.in.Close()
-	if err != nil {
-		return err
-	}
 	return client.conn.Close()
 }
