@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"io"
 	"net"
 	"time"
@@ -19,6 +20,7 @@ type telnetClient struct {
 	in      io.ReadCloser
 	out     io.Writer
 	conn    net.Conn
+	reader  *bufio.Reader
 }
 
 func NewTelnetClient(address string, timeout time.Duration, in io.ReadCloser, out io.Writer) TelnetClient {
@@ -26,11 +28,12 @@ func NewTelnetClient(address string, timeout time.Duration, in io.ReadCloser, ou
 }
 
 func (client *telnetClient) Connect() error {
-	conn, err := net.Dial("tcp", client.address)
+	conn, err := net.DialTimeout("tcp", client.address, timeout)
 	if err != nil {
 		return err
 	}
 	client.conn = conn
+	client.reader = bufio.NewReader(client.conn)
 	return nil
 }
 
@@ -45,8 +48,9 @@ func (client *telnetClient) Send() error {
 	}
 	return nil
 }
+
 func (client *telnetClient) Receive() error {
-	buf, err := io.ReadAll(client.conn)
+	buf, err := client.reader.ReadBytes('\n')
 	if err != nil {
 		return err
 	}
@@ -56,6 +60,7 @@ func (client *telnetClient) Receive() error {
 	}
 	return nil
 }
+
 func (client *telnetClient) Close() error {
 	err := client.in.Close()
 	if err != nil {
