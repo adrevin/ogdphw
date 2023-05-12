@@ -12,6 +12,7 @@ type TelnetClient interface {
 	Send() error
 	Receive() error
 }
+
 type telnetClient struct {
 	address string
 	timeout time.Duration
@@ -56,8 +57,9 @@ func (client *telnetClient) Receive() error {
 	return nil
 }
 func (client *telnetClient) Close() error {
+	err := client.in.Close()
+	if err != nil {
+		return err
+	}
 	return client.conn.Close()
 }
-
-// Place your code here.
-// P.S. Author's solution takes no more than 50 lines.
