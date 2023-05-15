@@ -43,19 +43,20 @@ func main() {
 
 	go func() {
 		defer wg.Done()
-		reader := bufio.NewReader(os.Stdin)
+		scanner := bufio.NewScanner(os.Stdin)
+		scanner.Split(bufio.ScanBytes)
 		for {
 			select {
 			case <-ctx.Done():
 				client.Close()
 				return
 			default:
-				inp, err := reader.ReadString('\n')
-				if errors.Is(err, io.EOF) {
+				scanner.Scan()
+				if errors.Is(scanner.Err(), io.EOF) {
 					stop()
 					break
 				}
-				in.WriteString(inp)
+				in.Write(scanner.Bytes())
 				err = client.Send()
 				if err != nil {
 					stop()
