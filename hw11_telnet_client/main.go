@@ -25,6 +25,7 @@ func main() {
 	flag.Parse()
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
 
 	address := net.JoinHostPort(flag.Args()[0], flag.Args()[1])
 	in := &bytes.Buffer{}
