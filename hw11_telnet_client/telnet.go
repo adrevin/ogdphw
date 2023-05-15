@@ -40,11 +40,7 @@ func (client *telnetClient) Connect() error {
 }
 
 func (client *telnetClient) Send() error {
-	buf, err := io.ReadAll(client.in)
-	if err != nil {
-		return err
-	}
-	_, err = client.conn.Write(buf)
+	_, err := io.Copy(client.conn, client.in)
 	if err != nil {
 		return err
 	}
