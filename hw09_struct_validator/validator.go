@@ -1,7 +1,11 @@
 package hw09structvalidator
 
 import (
+	"errors"
+	"fmt"
 	"reflect"
+	"strconv"
+	"strings"
 )
 
 type ValidationError struct {
@@ -11,13 +15,25 @@ type ValidationError struct {
 
 type ValidationErrors []ValidationError
 
+const (
+	NotGreaterThanOrEqualMin = "not greater than or equal min"
+	NotLessThanOrEqualMax    = "not less than or equal max"
+	NotInEnumeration         = "not in enumeration"
+)
+
+var (
+	ErrNotGreaterThanOrEqualMin = errors.New(NotGreaterThanOrEqualMin)
+	ErrNotLessThanOrEqualMax    = errors.New(NotLessThanOrEqualMax)
+	ErrNotInEnumeration         = errors.New(NotInEnumeration)
+)
+
 func (ve ValidationErrors) Error() string {
 	err := ""
 	if len(ve) == 0 {
 		return err
 	}
 	for _, v := range ve {
-		err += v.Err.Error()
+		err += fmt.Sprintf("field \"%s\" has error: %s\n", v.Field, v.Err)
 	}
 	return err
 }
@@ -28,24 +44,27 @@ func Validate(v interface{}) error {
 	rv := reflect.ValueOf(v)
 	for i := 0; i < rv.NumField(); i++ {
 		field := rv.Type().Field(i)
-		t := field.Tag.Get("validate")
-		if t == "" {
+		tag := field.Tag.Get("validate")
+		if tag == "" {
 			continue
 		}
+		tags := strings.Split(tag, "|")
 		value := rv.Field(i)
 		switch value.Kind() {
 		case reflect.Int:
-			if err := validateIntField(field.Name, value.Int(), t); err != nil {
-				errors = append(errors, *err)
+			for _, tag = range tags {
+				if err := validateIntField(field.Name, value.Int(), tag); err != nil {
+					errors = append(errors, *err)
+				}
 			}
 		case reflect.String:
-			if err := validateStringField(field.Name, value.String(), t); err != nil {
+			if err := validateStringField(field.Name, value.String(), tag); err != nil {
 				errors = append(errors, *err)
 			}
 		case reflect.Slice:
 			if slice, ok := value.Interface().([]string); ok {
 				for _, s := range slice {
-					if err := validateStringField(field.Name, s, t); err != nil {
+					if err := validateStringField(field.Name, s, tag); err != nil {
 						errors = append(errors, *err)
 					}
 				}
@@ -82,10 +101,52 @@ func Validate(v interface{}) error {
 	return errors
 }
 
-func validateIntField(n string, v int64, t string) *ValidationError {
-	/*	"in:200,404,500"
-		"min:18|max:50"
-	*/
+func validateIntField(f string, v int64, tag string) *ValidationError {
+	t := strings.Split(tag, ":")
+	if len(t) != 2 {
+		// invalid tag, not processed
+		return nil
+	}
+	switch t[0] {
+	case "in":
+		values := make([]int64, 0)
+		for _, vs := range strings.Split(t[1], ",") {
+			v, err := strconv.ParseInt(vs, 10, 64)
+			// invalid tag, not processed
+			if err != nil {
+				return nil
+			}
+			values = append(values, v)
+		}
+		// invalid tag, not processed
+		if len(values) < 1 {
+			return nil
+		}
+		inv := true
+		for _, s := range values {
+			if v == s {
+				inv = false
+				break
+			}
+		}
+		if inv {
+			return &ValidationError{Field: f, Err: ErrNotInEnumeration}
+		}
+		return nil
+	case "max", "min":
+		l, err := strconv.ParseInt(t[1], 10, 64)
+		// invalid tag, not processed
+		if err != nil {
+			break
+		}
+		if t[0] == "max" && v > l {
+			return &ValidationError{Field: f, Err: ErrNotLessThanOrEqualMax}
+		}
+		if t[0] == "min" && v < l {
+			return &ValidationError{Field: f, Err: ErrNotGreaterThanOrEqualMin}
+		}
+		break
+	}
 	return nil
 }
 

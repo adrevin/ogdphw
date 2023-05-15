@@ -38,38 +38,30 @@ type (
 	}
 )
 
+var user = User{
+	ID:     "d174b2a2-be11-4695-871b-ecebe524058d",
+	Name:   "name",
+	Age:    18,
+	Email:  "em@ai.l",
+	Role:   "admin",
+	Phones: []string{"88005555555", "88003333333"},
+}
+var app = App{Version: `0.0.0`}
+var response = Response{Code: 200}
+
 func TestValidate(t *testing.T) {
+
 	tests := []struct {
 		in          interface{}
 		expectedErr error
 	}{
-		{
-			in: User{
-				ID:     "d174b2a2-be11-4695-871b-ecebe524058d",
-				Name:   "name",
-				Age:    18,
-				Email:  "em@ai.l",
-				Role:   "admin",
-				Phones: []string{"88005555555", "88003333333"},
-			},
-			expectedErr: nil,
-		},
-		{
-			in: App{
-				Version: `0.0.0`,
-			},
-			expectedErr: nil,
-		},
-		{
-			in: Response{
-				Code: 200,
-			},
-			expectedErr: nil,
-		},
+		{in: user, expectedErr: nil},
+		{in: app, expectedErr: nil},
+		{in: response, expectedErr: nil},
 	}
 
 	for i, tt := range tests {
-		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
+		t.Run(fmt.Sprintf("valid data, case %d", i), func(t *testing.T) {
 			tt := tt
 			t.Parallel()
 
@@ -80,4 +72,28 @@ func TestValidate(t *testing.T) {
 			_ = tt
 		})
 	}
+
+	t.Run("integers", func(t *testing.T) {
+
+		err := Validate(user)
+		require.Nil(t, err)
+
+		user.Age = 0
+		err = Validate(user)
+		require.NotNil(t, err)
+		require.Equal(t, fmt.Sprintf("field \"Age\" has error: %s\n", NotGreaterThanOrEqualMin), err.Error())
+
+		user.Age = 100
+		err = Validate(user)
+		require.NotNil(t, err)
+		require.Equal(t, fmt.Sprintf("field \"Age\" has error: %s\n", NotLessThanOrEqualMax), err.Error())
+
+		err = Validate(response)
+		require.Nil(t, err)
+
+		response.Code = 201
+		err = Validate(response)
+		require.NotNil(t, err)
+		require.Equal(t, fmt.Sprintf("field \"Code\" has error: %s\n", NotInEnumeration), err.Error())
+	})
 }
