@@ -1,6 +1,7 @@
 package hw09structvalidator
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"reflect"
@@ -33,14 +34,11 @@ var (
 )
 
 func (ve ValidationErrors) Error() string {
-	err := ""
-	if len(ve) == 0 {
-		return err
-	}
+	var buffer bytes.Buffer
 	for _, v := range ve {
-		err += fmt.Sprintf("field \"%s\" has error: %s\n", v.Field, v.Err)
+		buffer.WriteString(fmt.Sprintf("field \"%s\" has error: %s\n", v.Field, v.Err))
 	}
-	return err
+	return buffer.String()
 }
 
 func Validate(v interface{}) error {
