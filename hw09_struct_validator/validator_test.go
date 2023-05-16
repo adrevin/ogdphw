@@ -51,6 +51,7 @@ var (
 	}
 	app      = App{Version: `0.0.0`}
 	response = Response{Code: 200}
+	token    = Token{}
 )
 
 func TestValidate(t *testing.T) {
@@ -61,6 +62,7 @@ func TestValidate(t *testing.T) {
 		{in: user, expectedErr: ValidationErrors(nil)},
 		{in: app, expectedErr: ValidationErrors(nil)},
 		{in: response, expectedErr: ValidationErrors(nil)},
+		{in: token, expectedErr: ValidationErrors(nil)},
 	}
 
 	for i, tt := range tests {
@@ -139,10 +141,5 @@ func TestValidate(t *testing.T) {
 		ve = append(ve, ValidationError{Field: "ID", Err: ErrInvalidLength})
 		err = Validate(u)
 		require.Equal(t, ve, err)
-	})
-
-	t.Run("no validators", func(t *testing.T) {
-		err := Validate(Token{})
-		require.Nil(t, err)
 	})
 }
