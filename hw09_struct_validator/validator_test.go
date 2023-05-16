@@ -54,7 +54,6 @@ var (
 )
 
 func TestValidate(t *testing.T) {
-
 	tests := []struct {
 		in          interface{}
 		expectedErr error

@@ -133,7 +133,7 @@ func validateIntField(f string, v int64, tag string) *ValidationError {
 		for _, s := range ev {
 			if v == s {
 				inv = false
-				return nil
+				break
 			}
 		}
 		if inv {
@@ -177,7 +177,7 @@ func validateStringField(f string, v string, tag string) *ValidationError {
 		}
 		return nil
 	case "regexp":
-		var r = regexp.MustCompile(val)
+		r := regexp.MustCompile(val)
 		if !r.MatchString(v) {
 			return &ValidationError{Field: f, Err: ErrDoesNotMatchRegExp}
 		}
@@ -187,6 +187,7 @@ func validateStringField(f string, v string, tag string) *ValidationError {
 		for _, vs := range strings.Split(val, ",") {
 			if v == vs {
 				inv = false
+				break
 			}
 		}
 		if inv {
