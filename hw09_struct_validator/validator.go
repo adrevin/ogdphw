@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -19,12 +20,16 @@ const (
 	NotGreaterThanOrEqualMin = "not greater than or equal min"
 	NotLessThanOrEqualMax    = "not less than or equal max"
 	NotInEnumeration         = "not in enumeration"
+	InvalidLength            = "invalid length"
+	DoesNotMatchRegExp       = "does not match regular expression"
 )
 
 var (
 	ErrNotGreaterThanOrEqualMin = errors.New(NotGreaterThanOrEqualMin)
 	ErrNotLessThanOrEqualMax    = errors.New(NotLessThanOrEqualMax)
 	ErrNotInEnumeration         = errors.New(NotInEnumeration)
+	ErrInvalidLength            = errors.New(InvalidLength)
+	ErrDoesNotMatchRegExp       = errors.New(DoesNotMatchRegExp)
 )
 
 func (ve ValidationErrors) Error() string {
@@ -107,26 +112,28 @@ func validateIntField(f string, v int64, tag string) *ValidationError {
 		// invalid tag, not processed
 		return nil
 	}
-	switch t[0] {
+	key := t[0]
+	val := t[1]
+	switch key {
 	case "in":
-		values := make([]int64, 0)
-		for _, vs := range strings.Split(t[1], ",") {
+		ev := make([]int64, 0)
+		for _, vs := range strings.Split(val, ",") {
 			v, err := strconv.ParseInt(vs, 10, 64)
 			// invalid tag, not processed
 			if err != nil {
 				return nil
 			}
-			values = append(values, v)
+			ev = append(ev, v)
 		}
 		// invalid tag, not processed
-		if len(values) < 1 {
+		if len(ev) < 1 {
 			return nil
 		}
 		inv := true
-		for _, s := range values {
+		for _, s := range ev {
 			if v == s {
 				inv = false
-				break
+				return nil
 			}
 		}
 		if inv {
@@ -134,26 +141,58 @@ func validateIntField(f string, v int64, tag string) *ValidationError {
 		}
 		return nil
 	case "max", "min":
-		l, err := strconv.ParseInt(t[1], 10, 64)
+		l, err := strconv.ParseInt(val, 10, 64)
 		// invalid tag, not processed
 		if err != nil {
-			break
+			return nil
 		}
-		if t[0] == "max" && v > l {
+		if key == "max" && v > l {
 			return &ValidationError{Field: f, Err: ErrNotLessThanOrEqualMax}
 		}
-		if t[0] == "min" && v < l {
+		if key == "min" && v < l {
 			return &ValidationError{Field: f, Err: ErrNotGreaterThanOrEqualMin}
 		}
-		break
+		return nil
 	}
 	return nil
 }
 
-func validateStringField(n string, v string, t string) *ValidationError {
-	/*	"len:36"
-		"regexp:^\w+@\w+\.\w+$"
-		"in:admin,stuff"
-	*/
+func validateStringField(f string, v string, tag string) *ValidationError {
+	t := strings.Split(tag, ":")
+	if len(t) != 2 {
+		// invalid tag, not processed
+		return nil
+	}
+	key := t[0]
+	val := t[1]
+	switch key {
+	case "len":
+		l, err := strconv.Atoi(val)
+		// invalid tag, not processed
+		if err != nil {
+			break
+		}
+		if len(v) < l {
+			return &ValidationError{Field: f, Err: ErrInvalidLength}
+		}
+		return nil
+	case "regexp":
+		var r = regexp.MustCompile(val)
+		if !r.MatchString(v) {
+			return &ValidationError{Field: f, Err: ErrDoesNotMatchRegExp}
+		}
+		return nil
+	case "in":
+		inv := true
+		for _, vs := range strings.Split(val, ",") {
+			if v == vs {
+				inv = false
+			}
+		}
+		if inv {
+			return &ValidationError{Field: f, Err: ErrNotInEnumeration}
+		}
+		return nil
+	}
 	return nil
 }

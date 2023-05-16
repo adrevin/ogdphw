@@ -10,7 +10,6 @@ import (
 
 type UserRole string
 
-// Test the function on different structures and other types.
 type (
 	User struct {
 		ID     string `json:"id" validate:"len:36"`
@@ -38,16 +37,21 @@ type (
 	}
 )
 
-var user = User{
-	ID:     "d174b2a2-be11-4695-871b-ecebe524058d",
-	Name:   "name",
-	Age:    18,
-	Email:  "em@ai.l",
-	Role:   "admin",
-	Phones: []string{"88005555555", "88003333333"},
-}
-var app = App{Version: `0.0.0`}
-var response = Response{Code: 200}
+var (
+	email = "em@a.il"
+	role  = "admin"
+	age   = 18
+	user  = User{
+		ID:     "d174b2a2-be11-4695-871b-ecebe524058d",
+		Name:   "name",
+		Age:    age,
+		Email:  email,
+		Role:   UserRole(role),
+		Phones: []string{"88005555555", "88003333333"},
+	}
+	app      = App{Version: `0.0.0`}
+	response = Response{Code: 200}
+)
 
 func TestValidate(t *testing.T) {
 
@@ -55,9 +59,9 @@ func TestValidate(t *testing.T) {
 		in          interface{}
 		expectedErr error
 	}{
-		{in: user, expectedErr: nil},
-		{in: app, expectedErr: nil},
-		{in: response, expectedErr: nil},
+		{in: user, expectedErr: ValidationErrors(nil)},
+		{in: app, expectedErr: ValidationErrors(nil)},
+		{in: response, expectedErr: ValidationErrors(nil)},
 	}
 
 	for i, tt := range tests {
@@ -67,33 +71,79 @@ func TestValidate(t *testing.T) {
 
 			for _, test := range tests {
 				err := Validate(test.in)
-				require.Nil(t, err)
+				require.Equal(t, test.expectedErr, err)
 			}
 			_ = tt
 		})
 	}
 
 	t.Run("integers", func(t *testing.T) {
+		u := user
+		var ve ValidationErrors
 
-		err := Validate(user)
+		u.Age = 0
+		ve = append(ve, ValidationError{Field: "Age", Err: ErrNotGreaterThanOrEqualMin})
+		err := Validate(u)
+		require.Equal(t, ve, err)
+
+		u.Age = 100
+		ve = ve[1:]
+		ve = append(ve, ValidationError{Field: "Age", Err: ErrNotLessThanOrEqualMax})
+		err = Validate(u)
+		require.Equal(t, ve, err)
+
+		u.Age = 100
+		ve = ve[1:]
+		ve = append(ve, ValidationError{Field: "Age", Err: ErrNotLessThanOrEqualMax})
+		err = Validate(u)
+		require.Equal(t, ve, err)
+
+		u.Age = age
+		u.Phones = []string{"8005555555", "8003333333"}
+		ve = ve[1:]
+		ve = append(ve, ValidationError{Field: "Phones", Err: ErrInvalidLength})
+		ve = append(ve, ValidationError{Field: "Phones", Err: ErrInvalidLength})
+		err = Validate(u)
+		require.Equal(t, ve, err)
+
+		r := response
+		err = Validate(r)
 		require.Nil(t, err)
 
-		user.Age = 0
-		err = Validate(user)
-		require.NotNil(t, err)
-		require.Equal(t, fmt.Sprintf("field \"Age\" has error: %s\n", NotGreaterThanOrEqualMin), err.Error())
+		r.Code = 201
+		ve = ve[2:]
+		ve = append(ve, ValidationError{Field: "Code", Err: ErrNotInEnumeration})
+		err = Validate(r)
+		require.Equal(t, ve, err)
+	})
 
-		user.Age = 100
-		err = Validate(user)
-		require.NotNil(t, err)
-		require.Equal(t, fmt.Sprintf("field \"Age\" has error: %s\n", NotLessThanOrEqualMax), err.Error())
+	t.Run("strings", func(t *testing.T) {
+		u := user
+		var ve ValidationErrors
 
-		err = Validate(response)
+		u.Email = "@user"
+		ve = append(ve, ValidationError{Field: "Email", Err: ErrDoesNotMatchRegExp})
+		err := Validate(u)
+		require.Equal(t, ve, err)
+
+		u.Email = email
+		u.Role = "invalid_role"
+		ve = ve[1:]
+		ve = append(ve, ValidationError{Field: "Role", Err: ErrNotInEnumeration})
+		err = Validate(u)
+		require.Equal(t, ve, err)
+
+		u.Email = email
+		u.Role = UserRole(role)
+		u.ID = "0"
+		ve = ve[1:]
+		ve = append(ve, ValidationError{Field: "ID", Err: ErrInvalidLength})
+		err = Validate(u)
+		require.Equal(t, ve, err)
+	})
+
+	t.Run("no validators", func(t *testing.T) {
+		err := Validate(Token{})
 		require.Nil(t, err)
-
-		response.Code = 201
-		err = Validate(response)
-		require.NotNil(t, err)
-		require.Equal(t, fmt.Sprintf("field \"Code\" has error: %s\n", NotInEnumeration), err.Error())
 	})
 }
