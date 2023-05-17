@@ -2,10 +2,11 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
-	"io"
 	"os"
 	"path"
+	"strings"
 )
 
 type Environment map[string]EnvValue
@@ -16,45 +17,69 @@ type EnvValue struct {
 	NeedRemove bool
 }
 
-var ErrEmptyFile = errors.New("file is empty")
+var (
+	ErrEmptyFile = errors.New("file is empty")
+	replaceOld   = []byte{0}
+	replaceNew   = []byte("\n")
+	tmp          = []byte{32}
+)
 
 // ReadDir reads a specified directory and returns map of env variables.
 // Variables represented as files where filename is name of variable, file first line is a value.
 func ReadDir(dir string) (Environment, error) {
+	t := string(tmp)
+	_ = t
 	env := Environment{}
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return env, err
+		return nil, err
 	}
 
 	for _, entry := range entries {
 		if entry.IsDir() {
 			continue
 		}
-
-		val, err := readFirstLine(path.Join(dir, entry.Name()))
+		entryName := entry.Name()
+		if strings.Contains(entryName, "=") {
+			continue
+		}
+		val, err := getFirstLine(path.Join(dir, entryName))
 		isEmptyFile := errors.Is(err, ErrEmptyFile)
 		if !isEmptyFile && err != nil {
-			return env, err
+			return nil, err
 		}
 
 		env[entry.Name()] = EnvValue{Value: val, NeedRemove: isEmptyFile}
 	}
+
 	return env, nil
 }
 
-func readFirstLine(filepath string) (string, error) {
-	file, err := os.Open(filepath)
-	defer file.Close()
+func getFirstLine(filePath string) (string, error) {
+	file, err := os.Open(filePath)
 	if err != nil {
 		return "", err
 	}
-	val, _, err := bufio.NewReader(file).ReadLine()
-	if errors.Is(err, io.EOF) {
+	defer file.Close()
+
+	fileInfo, err := file.Stat()
+	if err != nil {
+		return "", err
+	}
+	if fileInfo.Size() == 0 {
 		return "", ErrEmptyFile
 	}
+
+	val, _, err := bufio.NewReader(file).ReadLine()
 	if err != nil {
 		return "", err
 	}
-	return string(val), nil
+
+	return sanitize(val), nil
+}
+
+func sanitize(b []byte) string {
+	b = bytes.Replace(b, replaceOld, replaceNew, -1)
+	o := strings.TrimRight(string(b), "\n")
+	return strings.TrimRight(o, " ")
 }
