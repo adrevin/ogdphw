@@ -17,7 +17,7 @@ func TestReadDir(t *testing.T) {
 		require.Nil(t, err)
 		require.Equal(t, 5, len(evn))
 		require.Equal(t, "bar", evn["BAR"].Value)
-		require.Equal(t, " ", evn["EMPTY"].Value)
+		require.Equal(t, "", evn["EMPTY"].Value)
 		require.Equal(t, "   foo\nwith new line", evn["FOO"].Value)
 		require.Equal(t, "\"hello\"", evn["HELLO"].Value)
 		require.Equal(t, true, evn["UNSET"].NeedRemove)

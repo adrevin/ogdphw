@@ -7,17 +7,11 @@ import (
 
 // RunCmd runs a command + arguments (cmd) with environment variables from env.
 func RunCmd(cmd []string, env Environment) (returnCode int) {
-	process := exec.Command(cmd[0], cmd[1], cmd[2], cmd[3])
+	process := exec.Command(cmd[0], cmd[1], cmd[2], cmd[3]) //nolint:gosec
 
 	process.Stdin = os.Stdin
 	process.Stdout = os.Stdout
 	process.Stderr = os.Stderr
-
-	// remove quotes
-	/*for _, env := range os.Environ() {
-		entry := strings.SplitN(env, "=", 2)
-		os.Setenv(entry[0], strings.Trim(entry[1], "\""))
-	}*/
 
 	for key, value := range env {
 		if _, ok := os.LookupEnv(key); ok {
@@ -34,11 +28,9 @@ func RunCmd(cmd []string, env Environment) (returnCode int) {
 		return 1
 	}
 	if err := process.Wait(); err != nil {
-		if err, ok := err.(*exec.ExitError); ok {
+		if err, ok := err.(*exec.ExitError); ok { //nolint:errorlint
 			return err.ExitCode()
-		} else {
-			return 1
 		}
 	}
-	return 1
+	return 0
 }

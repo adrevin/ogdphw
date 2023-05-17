@@ -79,7 +79,7 @@ func getFirstLine(filePath string) (string, error) {
 }
 
 func sanitize(b []byte) string {
-	b = bytes.Replace(b, replaceOld, replaceNew, -1)
+	b = bytes.ReplaceAll(b, replaceOld, replaceNew)
 	o := strings.TrimRight(string(b), "\n")
 	return strings.TrimRight(o, " ")
 }
