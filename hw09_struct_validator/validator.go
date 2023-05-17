@@ -78,6 +78,13 @@ func Validate(v interface{}) error {
 					}
 				}
 			}
+			if slice, ok := value.Interface().([]int64); ok {
+				for _, s := range slice {
+					if err := validateIntField(field.Name, s, tag); err != nil {
+						errors = append(errors, *err)
+					}
+				}
+			}
 		default:
 			errors = append(errors, ValidationError{Field: field.Name, Err: ErrUnsupportedDataType})
 		}
