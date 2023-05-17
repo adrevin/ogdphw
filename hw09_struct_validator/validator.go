@@ -23,6 +23,7 @@ const (
 	NotInEnumeration         = "not in enumeration"
 	InvalidLength            = "invalid length"
 	DoesNotMatchRegExp       = "does not match regular expression"
+	UnsupportedDataType      = "unsupported data type"
 )
 
 var (
@@ -31,6 +32,7 @@ var (
 	ErrNotInEnumeration         = errors.New(NotInEnumeration)
 	ErrInvalidLength            = errors.New(InvalidLength)
 	ErrDoesNotMatchRegExp       = errors.New(DoesNotMatchRegExp)
+	ErrUnsupportedDataType      = errors.New(UnsupportedDataType)
 )
 
 func (ve ValidationErrors) Error() string {
@@ -72,32 +74,8 @@ func Validate(v interface{}) error {
 					}
 				}
 			}
-		case
-			reflect.Invalid,
-			reflect.Bool,
-			reflect.Int8,
-			reflect.Int16,
-			reflect.Int32,
-			reflect.Int64,
-			reflect.Uint,
-			reflect.Uint8,
-			reflect.Uint16,
-			reflect.Uint32,
-			reflect.Uint64,
-			reflect.Uintptr,
-			reflect.Float32,
-			reflect.Float64,
-			reflect.Complex64,
-			reflect.Complex128,
-			reflect.Array,
-			reflect.Chan,
-			reflect.Func,
-			reflect.Interface,
-			reflect.Map,
-			reflect.Pointer,
-			reflect.Struct,
-			reflect.UnsafePointer:
-			break
+		default:
+			errors = append(errors, ValidationError{Field: field.Name, Err: ErrUnsupportedDataType})
 		}
 	}
 
