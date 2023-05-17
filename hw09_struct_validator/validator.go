@@ -55,7 +55,7 @@ func Validate(v interface{}) error {
 		}
 		tags := strings.Split(tag, "|")
 		value := rv.Field(i)
-		switch value.Kind() {
+		switch value.Kind() { //nolint:exhaustive
 		case reflect.Int:
 			for _, tag = range tags {
 				if err := validateIntField(field.Name, value.Int(), tag); err != nil {
@@ -70,13 +70,6 @@ func Validate(v interface{}) error {
 			if slice, ok := value.Interface().([]string); ok {
 				for _, s := range slice {
 					if err := validateStringField(field.Name, s, tag); err != nil {
-						errors = append(errors, *err)
-					}
-				}
-			}
-			if slice, ok := value.Interface().([]int64); ok {
-				for _, s := range slice {
-					if err := validateIntField(field.Name, s, tag); err != nil {
 						errors = append(errors, *err)
 					}
 				}
