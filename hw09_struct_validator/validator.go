@@ -46,6 +46,10 @@ func (ve ValidationErrors) Error() string {
 func Validate(v interface{}) error {
 	var errors ValidationErrors
 
+	if reflect.TypeOf(v).Name() != "struct" {
+		errors = append(errors, ValidationError{Field: "", Err: ErrUnsupportedDataType})
+		return errors
+	}
 	rv := reflect.ValueOf(v)
 	for i := 0; i < rv.NumField(); i++ {
 		field := rv.Type().Field(i)

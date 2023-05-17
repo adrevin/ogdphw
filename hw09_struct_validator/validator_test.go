@@ -142,4 +142,13 @@ func TestValidate(t *testing.T) {
 		err = Validate(u)
 		require.Equal(t, ve, err)
 	})
+
+	t.Run("invalid input", func(t *testing.T) {
+		var ve ValidationErrors
+		ve = append(ve, ValidationError{Field: "", Err: ErrUnsupportedDataType})
+		err := Validate("")
+		require.Equal(t, ve, err)
+		err = Validate(0)
+		require.Equal(t, ve, err)
+	})
 }
