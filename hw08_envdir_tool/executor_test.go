@@ -8,7 +8,9 @@ import (
 
 func TestRunCmd(t *testing.T) {
 	t.Run("", func(t *testing.T) {
-		env, _ := ReadDir(testDataPath)
+		env, err := ReadDir(testDataPath)
+		require.NoErrorf(t, err, "can not read dir")
+
 		code := RunCmd([]string{"/bin/bash", "./testdata/echo.sh", "arg1=1", "arg2=2"}, env)
 		require.Equal(t, 0, code)
 	})
