@@ -115,14 +115,14 @@ func validateIntField(f string, v int64, tag string) *ValidationError {
 		if len(ev) < 1 {
 			return &ValidationError{Field: f, Err: ErrInvalidTag}
 		}
-		inv := true
+		isInRange := false
 		for _, s := range ev {
 			if v == s {
-				inv = false
+				isInRange = true
 				break
 			}
 		}
-		if inv {
+		if !isInRange {
 			return &ValidationError{Field: f, Err: ErrNotInEnumeration}
 		}
 		return nil
@@ -167,14 +167,14 @@ func validateStringField(f string, v string, tag string) *ValidationError {
 		}
 		return nil
 	case "in":
-		inv := true
+		isInRange := false
 		for _, vs := range strings.Split(val, ",") {
 			if v == vs {
-				inv = false
+				isInRange = true
 				break
 			}
 		}
-		if inv {
+		if !isInRange {
 			return &ValidationError{Field: f, Err: ErrNotInEnumeration}
 		}
 		return nil
