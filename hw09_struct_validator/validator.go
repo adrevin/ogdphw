@@ -43,10 +43,10 @@ func (ve ValidationErrors) Error() string {
 	return buffer.String()
 }
 
-func Validate(v interface{}) error {
+func Validate(v interface{}) error { //nolint:gocognit
 	var errors ValidationErrors
 
-	if reflect.TypeOf(v).Name() != "struct" {
+	if reflect.TypeOf(v).Kind().String() != "struct" {
 		errors = append(errors, ValidationError{Field: "", Err: ErrUnsupportedDataType})
 		return errors
 	}
