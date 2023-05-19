@@ -24,6 +24,7 @@ const (
 	InvalidLength            = "invalid length"
 	DoesNotMatchRegExp       = "does not match regular expression"
 	UnsupportedDataType      = "unsupported data type"
+	InvalidTag               = "invalid tag"
 )
 
 var (
@@ -33,6 +34,7 @@ var (
 	ErrInvalidLength            = errors.New(InvalidLength)
 	ErrDoesNotMatchRegExp       = errors.New(DoesNotMatchRegExp)
 	ErrUnsupportedDataType      = errors.New(UnsupportedDataType)
+	ErrInvalidTag               = errors.New(InvalidTag)
 )
 
 func (ve ValidationErrors) Error() string {
@@ -96,8 +98,7 @@ func Validate(v interface{}) error { //nolint:gocognit
 func validateIntField(f string, v int64, tag string) *ValidationError {
 	t := strings.Split(tag, ":")
 	if len(t) != 2 {
-		// invalid tag, not processed
-		return nil
+		return &ValidationError{Field: f, Err: ErrInvalidTag}
 	}
 	key := t[0]
 	val := t[1]
@@ -106,15 +107,13 @@ func validateIntField(f string, v int64, tag string) *ValidationError {
 		ev := make([]int64, 0)
 		for _, vs := range strings.Split(val, ",") {
 			v, err := strconv.ParseInt(vs, 10, 64)
-			// invalid tag, not processed
 			if err != nil {
-				return nil
+				return &ValidationError{Field: f, Err: ErrInvalidTag}
 			}
 			ev = append(ev, v)
 		}
-		// invalid tag, not processed
 		if len(ev) < 1 {
-			return nil
+			return &ValidationError{Field: f, Err: ErrInvalidTag}
 		}
 		inv := true
 		for _, s := range ev {
@@ -129,9 +128,8 @@ func validateIntField(f string, v int64, tag string) *ValidationError {
 		return nil
 	case "max", "min":
 		l, err := strconv.ParseInt(val, 10, 64)
-		// invalid tag, not processed
 		if err != nil {
-			return nil
+			return &ValidationError{Field: f, Err: ErrInvalidTag}
 		}
 		if key == "max" && v > l {
 			return &ValidationError{Field: f, Err: ErrNotLessThanOrEqualMax}
@@ -155,9 +153,8 @@ func validateStringField(f string, v string, tag string) *ValidationError {
 	switch key {
 	case "len":
 		l, err := strconv.Atoi(val)
-		// invalid tag, not processed
 		if err != nil {
-			break
+			return &ValidationError{Field: f, Err: ErrInvalidTag}
 		}
 		if len(v) < l {
 			return &ValidationError{Field: f, Err: ErrInvalidLength}
