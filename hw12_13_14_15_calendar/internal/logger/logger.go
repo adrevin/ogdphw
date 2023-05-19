@@ -1,11 +1,18 @@
 package logger
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/configuration"
+)
+
+var cfg configuration.LoggerConf
 
 type Logger struct { // TODO
 }
 
-func New(level string) *Logger {
+func New(loggerConf configuration.LoggerConf) *Logger {
+	cfg = loggerConf
 	return &Logger{}
 }
 
