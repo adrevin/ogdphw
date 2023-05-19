@@ -23,5 +23,6 @@ func TestReadDir(t *testing.T) {
 		require.Equal(t, "\"hello\"", evn["HELLO"].Value)
 		require.Equal(t, true, evn["UNSET"].NeedRemove)
 	})
-	os.Remove(tmp.Name())
+	err = os.Remove(tmp.Name())
+	require.NoErrorf(t, err, "can not delete temporary file")
 }
