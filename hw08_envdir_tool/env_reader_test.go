@@ -10,11 +10,12 @@ import (
 const testDataPath = "./testdata/env"
 
 func TestReadDir(t *testing.T) {
-	tmp, _ := os.CreateTemp(testDataPath, "B=A=R.")
+	tmp, err := os.CreateTemp(testDataPath, "B=A=R.")
+	require.NoErrorf(t, err, "can not create temporary file")
 
 	t.Run("test ReadDir method", func(t *testing.T) {
 		evn, err := ReadDir(testDataPath)
-		require.Nil(t, err)
+		require.NoErrorf(t, err, "can not read dir")
 		require.Equal(t, 5, len(evn))
 		require.Equal(t, "bar", evn["BAR"].Value)
 		require.Equal(t, "", evn["EMPTY"].Value)
