@@ -104,22 +104,15 @@ func validateIntField(f string, v int64, tag string) *ValidationError {
 	val := t[1]
 	switch key {
 	case "in":
-		ev := make([]int64, 0)
-		for _, vs := range strings.Split(val, ",") {
-			v, err := strconv.ParseInt(vs, 10, 64)
+		isInRange := false
+		for _, stringItem := range strings.Split(val, ",") {
+			intItem, err := strconv.ParseInt(stringItem, 10, 64)
 			if err != nil {
 				return &ValidationError{Field: f, Err: ErrInvalidTag}
 			}
-			ev = append(ev, v)
-		}
-		if len(ev) < 1 {
-			return &ValidationError{Field: f, Err: ErrInvalidTag}
-		}
-		isInRange := false
-		for _, s := range ev {
-			if v == s {
+			if v == intItem {
 				isInRange = true
-				break
+				// with no 'break' to validate the entire tag
 			}
 		}
 		if !isInRange {
