@@ -48,7 +48,7 @@ func (ve ValidationErrors) Error() string {
 func Validate(v interface{}) error { //nolint:gocognit
 	var errors ValidationErrors
 
-	if reflect.TypeOf(v).Kind().String() != "struct" {
+	if reflect.TypeOf(v).Kind() != reflect.Struct {
 		errors = append(errors, ValidationError{Field: "", Err: ErrUnsupportedDataType})
 		return errors
 	}
