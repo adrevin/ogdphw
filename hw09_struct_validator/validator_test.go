@@ -43,6 +43,9 @@ type (
 	StructWithUnsupportedFieldType struct {
 		Chan chan int `validate:"len:0"`
 	}
+	StructWithInvalidTag struct {
+		Field int `validate:"in:"`
+	}
 )
 
 var (
@@ -160,5 +163,7 @@ func TestValidate(t *testing.T) {
 		require.Equal(t, ErrDataUnsupportedFieldType, err)
 		err = Validate(StructWithUnsupportedFieldType{})
 		require.Equal(t, ErrDataUnsupportedFieldType, err)
+		err = Validate(StructWithInvalidTag{})
+		require.Equal(t, ErrDataInvalidTag, err)
 	})
 }

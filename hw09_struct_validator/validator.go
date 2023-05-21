@@ -78,25 +78,41 @@ func Validate(v interface{}) error { //nolint:gocognit
 		switch value.Kind() { //nolint:exhaustive
 		case reflect.Int:
 			for _, tag = range tags {
-				if err := validateIntField(field.Name, value.Int(), tag); err != nil {
-					errors = append(errors, *err)
+				result, err := validateIntField(field.Name, value.Int(), tag)
+				if err != nil {
+					return *err
+				}
+				if result != nil {
+					errors = append(errors, *result)
 				}
 			}
 		case reflect.String:
-			if err := validateStringField(field.Name, value.String(), tag); err != nil {
-				errors = append(errors, *err)
+			result, err := validateStringField(field.Name, value.String(), tag)
+			if err != nil {
+				return *err
+			}
+			if result != nil {
+				errors = append(errors, *result)
 			}
 		case reflect.Slice:
 			if slice, ok := value.Interface().([]string); ok {
 				for _, s := range slice {
-					if err := validateStringField(field.Name, s, tag); err != nil {
-						errors = append(errors, *err)
+					result, err := validateStringField(field.Name, s, tag)
+					if err != nil {
+						return *err
+					}
+					if result != nil {
+						errors = append(errors, *result)
 					}
 				}
 			} else if slice, ok := value.Interface().([]int64); ok {
 				for _, s := range slice {
-					if err := validateIntField(field.Name, s, tag); err != nil {
-						errors = append(errors, *err)
+					result, err := validateIntField(field.Name, s, tag)
+					if err != nil {
+						return *err
+					}
+					if result != nil {
+						errors = append(errors, *result)
 					}
 				}
 			} else {
@@ -110,10 +126,10 @@ func Validate(v interface{}) error { //nolint:gocognit
 	return errors
 }
 
-func validateIntField(f string, v int64, tag string) *ValidationError {
+func validateIntField(f string, v int64, tag string) (*ValidationError, *DataError) {
 	t := strings.Split(tag, ":")
 	if len(t) != 2 {
-		return &ValidationError{Field: f, Err: ErrDataInvalidTag}
+		return nil, &ErrDataInvalidTag
 	}
 	key := t[0]
 	val := t[1]
@@ -123,7 +139,7 @@ func validateIntField(f string, v int64, tag string) *ValidationError {
 		for _, stringItem := range strings.Split(val, ",") {
 			intItem, err := strconv.ParseInt(stringItem, 10, 64)
 			if err != nil {
-				return &ValidationError{Field: f, Err: ErrDataInvalidTag}
+				return nil, &ErrDataInvalidTag
 			}
 			if v == intItem {
 				isInRange = true
@@ -131,30 +147,31 @@ func validateIntField(f string, v int64, tag string) *ValidationError {
 			}
 		}
 		if !isInRange {
-			return &ValidationError{Field: f, Err: ErrValidationNotInEnumeration}
+			return &ValidationError{Field: f, Err: ErrValidationNotInEnumeration}, nil
 		}
-		return nil
+		return nil, nil
 	case "max", "min":
 		l, err := strconv.ParseInt(val, 10, 64)
 		if err != nil {
-			return &ValidationError{Field: f, Err: ErrDataInvalidTag}
+			return nil, &ErrDataInvalidTag
 		}
 		if key == "max" && v > l {
-			return &ValidationError{Field: f, Err: ErrValidationNotLessThanOrEqualMax}
+			return &ValidationError{Field: f, Err: ErrValidationNotLessThanOrEqualMax}, nil
 		}
 		if key == "min" && v < l {
-			return &ValidationError{Field: f, Err: ErrValidationNotGreaterThanOrEqualMin}
+			return &ValidationError{Field: f, Err: ErrValidationNotGreaterThanOrEqualMin}, nil
 		}
-		return nil
+		return nil, nil
+	default:
+		return nil, &ErrDataInvalidTag
 	}
-	return nil
+	return nil, nil
 }
 
-func validateStringField(f string, v string, tag string) *ValidationError {
+func validateStringField(f string, v string, tag string) (*ValidationError, *DataError) {
 	t := strings.Split(tag, ":")
 	if len(t) != 2 {
-		// invalid tag, not processed
-		return nil
+		return nil, &ErrDataInvalidTag
 	}
 	key := t[0]
 	val := t[1]
@@ -162,18 +179,18 @@ func validateStringField(f string, v string, tag string) *ValidationError {
 	case "len":
 		l, err := strconv.Atoi(val)
 		if err != nil {
-			return &ValidationError{Field: f, Err: ErrDataInvalidTag}
+			return nil, &ErrDataInvalidTag
 		}
 		if len(v) < l {
-			return &ValidationError{Field: f, Err: ErrValidationInvalidLength}
+			return &ValidationError{Field: f, Err: ErrValidationInvalidLength}, nil
 		}
-		return nil
+		return nil, nil
 	case "regexp":
 		r := regexp.MustCompile(val)
 		if !r.MatchString(v) {
-			return &ValidationError{Field: f, Err: ErrValidationDoesNotMatchRegExp}
+			return &ValidationError{Field: f, Err: ErrValidationDoesNotMatchRegExp}, nil
 		}
-		return nil
+		return nil, nil
 	case "in":
 		isInRange := false
 		for _, vs := range strings.Split(val, ",") {
@@ -183,9 +200,11 @@ func validateStringField(f string, v string, tag string) *ValidationError {
 			}
 		}
 		if !isInRange {
-			return &ValidationError{Field: f, Err: ErrValidationNotInEnumeration}
+			return &ValidationError{Field: f, Err: ErrValidationNotInEnumeration}, nil
 		}
-		return nil
+		return nil, nil
+	default:
+		return nil, &ErrDataInvalidTag
 	}
-	return nil
+	return nil, nil
 }
