@@ -35,6 +35,14 @@ type (
 		Code int    `validate:"in:200,404,500"`
 		Body string `json:"omitempty"`
 	}
+
+	StructWithUnsupportedSliceType struct {
+		Header [][]int `validate:"len:0"`
+	}
+
+	StructWithUnsupportedFieldType struct {
+		Chan chan int `validate:"len:0"`
+	}
 )
 
 var (
@@ -83,27 +91,27 @@ func TestValidate(t *testing.T) {
 		var ve ValidationErrors
 
 		u.Age = 0
-		ve = append(ve, ValidationError{Field: "Age", Err: ErrNotGreaterThanOrEqualMin})
+		ve = append(ve, ValidationError{Field: "Age", Err: ErrValidationNotGreaterThanOrEqualMin})
 		err := Validate(u)
 		require.Equal(t, ve, err)
 
 		u.Age = 100
 		ve = ve[1:]
-		ve = append(ve, ValidationError{Field: "Age", Err: ErrNotLessThanOrEqualMax})
+		ve = append(ve, ValidationError{Field: "Age", Err: ErrValidationNotLessThanOrEqualMax})
 		err = Validate(u)
 		require.Equal(t, ve, err)
 
 		u.Age = 100
 		ve = ve[1:]
-		ve = append(ve, ValidationError{Field: "Age", Err: ErrNotLessThanOrEqualMax})
+		ve = append(ve, ValidationError{Field: "Age", Err: ErrValidationNotLessThanOrEqualMax})
 		err = Validate(u)
 		require.Equal(t, ve, err)
 
 		u.Age = age
 		u.Phones = []string{"8005555555", "8003333333"}
 		ve = ve[1:]
-		ve = append(ve, ValidationError{Field: "Phones", Err: ErrInvalidLength})
-		ve = append(ve, ValidationError{Field: "Phones", Err: ErrInvalidLength})
+		ve = append(ve, ValidationError{Field: "Phones", Err: ErrValidationInvalidLength})
+		ve = append(ve, ValidationError{Field: "Phones", Err: ErrValidationInvalidLength})
 		err = Validate(u)
 		require.Equal(t, ve, err)
 
@@ -113,7 +121,7 @@ func TestValidate(t *testing.T) {
 
 		r.Code = 201
 		ve = ve[2:]
-		ve = append(ve, ValidationError{Field: "Code", Err: ErrNotInEnumeration})
+		ve = append(ve, ValidationError{Field: "Code", Err: ErrValidationNotInEnumeration})
 		err = Validate(r)
 		require.Equal(t, ve, err)
 	})
@@ -123,14 +131,14 @@ func TestValidate(t *testing.T) {
 		var ve ValidationErrors
 
 		u.Email = "@user"
-		ve = append(ve, ValidationError{Field: "Email", Err: ErrDoesNotMatchRegExp})
+		ve = append(ve, ValidationError{Field: "Email", Err: ErrValidationDoesNotMatchRegExp})
 		err := Validate(u)
 		require.Equal(t, ve, err)
 
 		u.Email = email
 		u.Role = "invalid_role"
 		ve = ve[1:]
-		ve = append(ve, ValidationError{Field: "Role", Err: ErrNotInEnumeration})
+		ve = append(ve, ValidationError{Field: "Role", Err: ErrValidationNotInEnumeration})
 		err = Validate(u)
 		require.Equal(t, ve, err)
 
@@ -138,17 +146,19 @@ func TestValidate(t *testing.T) {
 		u.Role = UserRole(role)
 		u.ID = "0"
 		ve = ve[1:]
-		ve = append(ve, ValidationError{Field: "ID", Err: ErrInvalidLength})
+		ve = append(ve, ValidationError{Field: "ID", Err: ErrValidationInvalidLength})
 		err = Validate(u)
 		require.Equal(t, ve, err)
 	})
 
 	t.Run("invalid input", func(t *testing.T) {
-		var ve ValidationErrors
-		ve = append(ve, ValidationError{Field: "", Err: ErrUnsupportedDataType})
 		err := Validate("")
-		require.Equal(t, ve, err)
+		require.Equal(t, ErrDataUnsupportedType, err)
 		err = Validate(0)
-		require.Equal(t, ve, err)
+		require.Equal(t, ErrDataUnsupportedType, err)
+		err = Validate(StructWithUnsupportedSliceType{})
+		require.Equal(t, ErrDataUnsupportedFieldType, err)
+		err = Validate(StructWithUnsupportedFieldType{})
+		require.Equal(t, ErrDataUnsupportedFieldType, err)
 	})
 }
