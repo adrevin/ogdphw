@@ -95,7 +95,7 @@ func Validate(v interface{}) error { //nolint:gocognit
 				errors = append(errors, *result)
 			}
 		case reflect.Slice:
-			if slice, ok := value.Interface().([]string); ok {
+			if slice, ok := value.Interface().([]string); ok { //nolint:nestif
 				for _, s := range slice {
 					result, err := validateStringField(field.Name, s, tag)
 					if err != nil {
@@ -165,7 +165,6 @@ func validateIntField(f string, v int64, tag string) (*ValidationError, *DataErr
 	default:
 		return nil, &ErrDataInvalidTag
 	}
-	return nil, nil
 }
 
 func validateStringField(f string, v string, tag string) (*ValidationError, *DataError) {
@@ -206,5 +205,4 @@ func validateStringField(f string, v string, tag string) (*ValidationError, *Dat
 	default:
 		return nil, &ErrDataInvalidTag
 	}
-	return nil, nil
 }
