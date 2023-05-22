@@ -1,6 +1,6 @@
 module github.com/adrevin/ogdphw/hw12_13_14_15_calendar
 
-go 1.19
+go 1.20
 
 require (
 	github.com/stretchr/testify v1.8.3
