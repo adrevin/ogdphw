@@ -35,6 +35,8 @@ func (l Storage) Create(event *entities.Event) uuid.UUID {
 
 	l.mu.RLock()
 	event.ID = uuid.New()
+	setKeys(event)
+	l.makeMaps(event)
 	l.save(event)
 
 	return event.ID
@@ -44,10 +46,14 @@ func (l Storage) Update(id uuid.UUID, event *entities.Event) error {
 	defer l.mu.RUnlock()
 
 	l.mu.RLock()
+
 	if l.events[id] == nil {
 		return ErrEventNotFound
 	}
+	l.Delete(event.ID)
 	event.ID = id
+	setKeys(event)
+	l.makeMaps(event)
 	l.save(event)
 	return nil
 }
@@ -62,15 +68,9 @@ func (l Storage) Delete(id uuid.UUID) error {
 	}
 
 	delete(l.events, event.ID)
-
-	dayKey := dayKey(event.Time)
-	delete(l.days[dayKey], event.ID)
-
-	monthKey := monthKey(event.Time)
-	delete(l.months[monthKey], event.ID)
-
-	weekKey := weekKey(event.Time)
-	delete(l.weeks[weekKey], event.ID)
+	delete(l.weeks[event.WeekKey], event.ID)
+	delete(l.days[event.DayKey], event.ID)
+	delete(l.months[event.MonthKey], event.ID)
 
 	return nil
 }
@@ -92,26 +92,32 @@ func (l Storage) MonthEvens(time time.Time) ([]entities.Event, error) { //nolint
 
 func (l Storage) save(event *entities.Event) {
 	l.events[event.ID] = event
-
-	dayKey := dayKey(event.Time)
-	if l.days[dayKey] == nil {
-		l.days[dayKey] = make(map[uuid.UUID]*entities.Event)
-	}
-	l.days[dayKey][event.ID] = event
-
-	weekKey := weekKey(event.Time)
-	if l.weeks[weekKey] == nil {
-		l.weeks[weekKey] = make(map[uuid.UUID]*entities.Event)
-	}
-	l.weeks[weekKey][event.ID] = event
-
-	monthKey := monthKey(event.Time)
-	if l.months[monthKey] == nil {
-		l.months[monthKey] = make(map[uuid.UUID]*entities.Event)
-	}
+	l.days[event.DayKey][event.ID] = event
+	l.weeks[event.WeekKey][event.ID] = event
+	l.months[event.MonthKey][event.ID] = event
 }
 
 var location = time.UTC
+
+func setKeys(event *entities.Event) {
+	event.DayKey = dayKey(event.Time)
+	event.WeekKey = weekKey(event.Time)
+	event.MonthKey = monthKey(event.Time)
+}
+
+func (l Storage) makeMaps(event *entities.Event) {
+	if l.days[event.DayKey] == nil {
+		l.days[event.DayKey] = make(map[uuid.UUID]*entities.Event)
+	}
+
+	if l.weeks[event.WeekKey] == nil {
+		l.weeks[event.DayKey] = make(map[uuid.UUID]*entities.Event)
+	}
+
+	if l.months[event.MonthKey] == nil {
+		l.months[event.MonthKey] = make(map[uuid.UUID]*entities.Event)
+	}
+}
 
 func dayKey(t time.Time) time.Time {
 	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, location)

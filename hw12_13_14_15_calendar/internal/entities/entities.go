@@ -12,6 +12,9 @@ type Event struct {
 	Time     time.Time
 	Duration time.Duration
 	UserID   uuid.UUID
+	DayKey   time.Time
+	WeekKey  time.Time
+	MonthKey time.Time
 }
 
 type Notification struct {
