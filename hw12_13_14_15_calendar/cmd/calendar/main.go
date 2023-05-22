@@ -12,8 +12,8 @@ import (
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/app"
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/configuration"
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/logger"
-	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/server/http"
-	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/storage/memory"
+	internalhttp "github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/server/http"
+	memorystorage "github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/storage/memory"
 	"go.uber.org/zap"
 )
 
