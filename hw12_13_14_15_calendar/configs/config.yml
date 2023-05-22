@@ -1,2 +1,11 @@
+## see https://github.com/uber-go/zap/blob/master/config.go
 logger:
-  level: INFO
+  level: info
+  encoding: console
+  encoderConfig:
+    timeKey:        ""
+    levelKey:       "L"
+    nameKey:        "N"
+    callerKey:      "C"
+    messageKey:     "M"
+    stacktraceKey:  "S"

@@ -1,8 +1,9 @@
 package configuration
 
 import (
-	"gopkg.in/yaml.v3"
 	"os"
+
+	"gopkg.in/yaml.v3"
 )
 
 func Configure[T interface{}](t *T, configFile string) error {
@@ -15,5 +16,6 @@ func Configure[T interface{}](t *T, configFile string) error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }

@@ -1,12 +1,9 @@
 package configuration
 
-type Config struct {
-	Logger LoggerConf
-	// TODO
-}
+import "go.uber.org/zap"
 
-type LoggerConf struct {
-	Level string
+type Config struct {
+	Logger zap.Config `yaml:"logger"`
 }
 
 func NewConfig(configFile string) (Config, error) {
