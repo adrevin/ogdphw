@@ -3,6 +3,7 @@ module github.com/adrevin/ogdphw/hw12_13_14_15_calendar
 go 1.20
 
 require (
+	github.com/google/uuid v1.3.0
 	github.com/stretchr/testify v1.8.3
 	go.uber.org/zap v1.24.0
 	gopkg.in/yaml.v3 v3.0.1
