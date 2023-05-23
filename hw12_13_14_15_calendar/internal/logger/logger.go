@@ -8,11 +8,21 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-type Logger struct {
-	zapLogger *zap.Logger
+type Logger interface {
+	Sync()
+	Debug(msg string)
+	Info(msg string)
+	Warn(msg string)
+	Error(msg string)
+	Panic(msg string)
+	Fatal(msg string)
 }
 
-func New(config zap.Config) *Logger {
+type logg struct {
+	logger *zap.Logger
+}
+
+func New(config zap.Config) Logger {
 	// defaults
 	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
 	config.EncoderConfig.EncodeLevel = zapcore.LowercaseLevelEncoder
@@ -24,37 +34,33 @@ func New(config zap.Config) *Logger {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	return &Logger{zapLogger: logger}
+	return &logg{logger: logger}
 }
 
-func (l Logger) Sync() {
-	l.zapLogger.Sync()
+func (l logg) Sync() {
+	l.logger.Sync()
 }
 
-func (l Logger) Debug(msg string, fields ...zap.Field) {
-	l.zapLogger.Debug(msg, fields...)
+func (l logg) Debug(msg string) {
+	l.logger.Debug(msg)
 }
 
-func (l Logger) Info(msg string, fields ...zap.Field) {
-	l.zapLogger.Info(msg, fields...)
+func (l logg) Info(msg string) {
+	l.logger.Info(msg)
 }
 
-func (l Logger) Warn(msg string, fields ...zap.Field) {
-	l.zapLogger.Warn(msg, fields...)
+func (l logg) Warn(msg string) {
+	l.logger.Warn(msg)
 }
 
-func (l Logger) Error(msg string, fields ...zap.Field) {
-	l.zapLogger.Error(msg, fields...)
+func (l logg) Error(msg string) {
+	l.logger.Error(msg)
 }
 
-func (l Logger) DPanic(msg string, fields ...zap.Field) {
-	l.zapLogger.DPanic(msg, fields...)
+func (l logg) Panic(msg string) {
+	l.logger.Panic(msg)
 }
 
-func (l Logger) Panic(msg string, fields ...zap.Field) {
-	l.zapLogger.Panic(msg, fields...)
-}
-
-func (l Logger) Fatal(msg string, fields ...zap.Field) {
-	l.zapLogger.Fatal(msg, fields...)
+func (l logg) Fatal(msg string) {
+	l.logger.Fatal(msg)
 }

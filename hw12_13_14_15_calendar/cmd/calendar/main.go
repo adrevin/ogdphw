@@ -14,7 +14,6 @@ import (
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/logger"
 	internalhttp "github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/server/http"
 	memorystorage "github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/storage/memory"
-	"go.uber.org/zap"
 )
 
 var configFile string
@@ -41,7 +40,7 @@ func main() {
 	storage := memorystorage.New()
 	calendar := app.New(logg, storage)
 
-	server := internalhttp.NewServer(logg, calendar)
+	server := internalhttp.NewServer(logg, calendar, config.Server)
 
 	ctx, cancel := signal.NotifyContext(context.Background(),
 		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
@@ -58,9 +57,7 @@ func main() {
 		}
 	}()
 
-	logg.Info(
-		"calendar is running...",
-		zap.String("logLevel", config.Logger.Level.String()))
+	logg.Info("calendar is running...")
 
 	if err := server.Start(ctx); err != nil {
 		logg.Error("failed to start http server: " + err.Error())

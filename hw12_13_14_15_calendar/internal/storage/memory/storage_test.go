@@ -6,13 +6,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/entities"
+	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/storage"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 )
 
 func TestStorage(t *testing.T) {
-	evt := entities.Event{
+	evt := storage.Event{
 		Title:    "Title",
 		Time:     time.Now().UTC(),
 		Duration: time.Hour,
@@ -20,28 +20,28 @@ func TestStorage(t *testing.T) {
 	}
 
 	t.Run("create", func(t *testing.T) {
-		storage := New()
-		evtID := storage.Create(&evt)
+		memStorage := New()
+		evtID := memStorage.Create(&evt)
 		require.NotEqual(t, uuid.Nil, evtID)
 	})
 
 	t.Run("update", func(t *testing.T) {
-		storage := New()
-		err := storage.Update(uuid.New(), &entities.Event{})
+		memStorage := New()
+		err := memStorage.Update(uuid.New(), &storage.Event{})
 		require.ErrorIs(t, ErrEventNotFound, err)
 
-		evtID := storage.Create(&evt)
-		err = storage.Update(evtID, &entities.Event{Title: "NewTitle"})
+		evtID := memStorage.Create(&evt)
+		err = memStorage.Update(evtID, &storage.Event{Title: "NewTitle"})
 		require.NoError(t, err)
 	})
 
 	t.Run("delete", func(t *testing.T) {
-		storage := New()
-		err := storage.Delete(uuid.New())
+		memStorage := New()
+		err := memStorage.Delete(uuid.New())
 		require.ErrorIs(t, ErrEventNotFound, err)
 
-		evtID := storage.Create(&evt)
-		err = storage.Delete(evtID)
+		evtID := memStorage.Create(&evt)
+		err = memStorage.Delete(evtID)
 		require.NoError(t, err)
 	})
 
@@ -54,52 +54,58 @@ func TestStorage(t *testing.T) {
 	   26 27 28 29 30 31
 	*/
 	t.Run("read", func(t *testing.T) {
-		storage := New()
+		memStorage := New()
 
 		tm := time.Date(1970, time.January, 10, 10, 0, 0, 0, time.UTC)
-		firstEvUD := storage.Create(&entities.Event{
+		firstEvUD := memStorage.Create(&storage.Event{
 			Time: tm, Title: "1970-01-10 - 1",
 		})
 		require.NotEqual(t, uuid.Nil, firstEvUD)
 
-		secondEvUD := storage.Create(&entities.Event{
+		secondEvUD := memStorage.Create(&storage.Event{
 			Time: tm, Title: "1970-01-10 - 2",
 		})
 		require.NotEqual(t, uuid.Nil, secondEvUD)
 
-		de := storage.DayEvens(tm)
+		de := memStorage.DayEvens(tm)
 		require.Equal(t, 2, len(de))
 		require.Equal(t, firstEvUD, de[0].ID)
 		require.Equal(t, secondEvUD, de[1].ID)
 		require.Equal(t, "1970-01-10 - 1", de[0].Title)
 		require.Equal(t, "1970-01-10 - 2", de[1].Title)
 
-		we := storage.WeekEvens(time.Date(1970, time.January, 5, 10, 0, 0, 0, time.UTC))
+		we := memStorage.WeekEvens(time.Date(1970, time.January, 5, 10, 0, 0, 0, time.UTC))
+		sort.Slice(we, func(i, j int) bool {
+			return we[i].Time.Before(we[j].Time)
+		})
 		require.Equal(t, de, we)
 
-		me := storage.MonthEvens(time.Date(1970, time.January, 5, 10, 0, 0, 0, time.UTC))
+		me := memStorage.MonthEvens(time.Date(1970, time.January, 5, 10, 0, 0, 0, time.UTC))
+		sort.Slice(me, func(i, j int) bool {
+			return me[i].Time.Before(me[j].Time)
+		})
 		require.Equal(t, we, me)
 
-		storage.Delete(secondEvUD)
-		de = storage.DayEvens(tm)
+		memStorage.Delete(secondEvUD)
+		de = memStorage.DayEvens(tm)
 		require.Equal(t, 1, len(de))
 		require.Equal(t, firstEvUD, de[0].ID)
 
-		storage.Delete(firstEvUD)
-		de = storage.DayEvens(tm)
+		memStorage.Delete(firstEvUD)
+		de = memStorage.DayEvens(tm)
 		require.Equal(t, 0, len(de))
 	})
 
 	t.Run("complex", func(t *testing.T) {
-		storage := New()
+		memStorage := New()
 		days := []int{6, 7, 14, 22, 23, 31}
 		for _, day := range days {
-			storage.Create(&entities.Event{
+			memStorage.Create(&storage.Event{
 				Time:  time.Date(1970, time.January, day, 10, 0, 0, 0, time.UTC),
 				Title: strconv.Itoa(day),
 			})
 		}
-		me := storage.MonthEvens(time.Date(1970, time.January, 1, 10, 0, 0, 0, time.UTC))
+		me := memStorage.MonthEvens(time.Date(1970, time.January, 1, 10, 0, 0, 0, time.UTC))
 		require.Equal(t, len(days), len(me))
 		sort.Slice(me, func(i, j int) bool {
 			return me[i].Time.Before(me[j].Time)
@@ -109,7 +115,7 @@ func TestStorage(t *testing.T) {
 			require.Equal(t, strconv.Itoa(days[i]), e.Title)
 		}
 
-		we := storage.WeekEvens(time.Date(1970, time.January, 5, 10, 0, 0, 0, time.UTC))
+		we := memStorage.WeekEvens(time.Date(1970, time.January, 5, 10, 0, 0, 0, time.UTC))
 		require.Equal(t, 2, len(we))
 		sort.Slice(me, func(i, j int) bool {
 			return me[i].Time.Before(me[j].Time)

@@ -5,32 +5,32 @@ import (
 	"sync"
 	"time"
 
-	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/entities"
+	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/storage"
 	"github.com/google/uuid"
 	"github.com/snabb/isoweek"
 )
 
 type Storage struct {
 	mu     *sync.RWMutex
-	events map[uuid.UUID]*entities.Event
-	days   map[time.Time]map[uuid.UUID]*entities.Event
-	weeks  map[time.Time]map[uuid.UUID]*entities.Event
-	months map[time.Time]map[uuid.UUID]*entities.Event
+	events map[uuid.UUID]*storage.Event
+	days   map[time.Time]map[uuid.UUID]*storage.Event
+	weeks  map[time.Time]map[uuid.UUID]*storage.Event
+	months map[time.Time]map[uuid.UUID]*storage.Event
 }
 
 func New() *Storage {
 	return &Storage{
-		events: make(map[uuid.UUID]*entities.Event),
-		days:   make(map[time.Time]map[uuid.UUID]*entities.Event),
-		weeks:  make(map[time.Time]map[uuid.UUID]*entities.Event),
-		months: make(map[time.Time]map[uuid.UUID]*entities.Event),
+		events: make(map[uuid.UUID]*storage.Event),
+		days:   make(map[time.Time]map[uuid.UUID]*storage.Event),
+		weeks:  make(map[time.Time]map[uuid.UUID]*storage.Event),
+		months: make(map[time.Time]map[uuid.UUID]*storage.Event),
 		mu:     &sync.RWMutex{},
 	}
 }
 
 var ErrEventNotFound = errors.New("unsupported file")
 
-func (l Storage) Create(event *entities.Event) uuid.UUID {
+func (l Storage) Create(event *storage.Event) uuid.UUID {
 	defer l.mu.RUnlock()
 
 	l.mu.RLock()
@@ -42,7 +42,7 @@ func (l Storage) Create(event *entities.Event) uuid.UUID {
 	return event.ID
 }
 
-func (l Storage) Update(id uuid.UUID, event *entities.Event) error {
+func (l Storage) Update(id uuid.UUID, event *storage.Event) error {
 	defer l.mu.RUnlock()
 
 	l.mu.RLock()
@@ -75,7 +75,7 @@ func (l Storage) Delete(id uuid.UUID) error {
 	return nil
 }
 
-func (l Storage) DayEvens(time time.Time) []*entities.Event {
+func (l Storage) DayEvens(time time.Time) []*storage.Event {
 	defer l.mu.RUnlock()
 
 	l.mu.RLock()
@@ -84,7 +84,7 @@ func (l Storage) DayEvens(time time.Time) []*entities.Event {
 	return eventsToResult(l.days[dayKey])
 }
 
-func (l Storage) WeekEvens(time time.Time) []*entities.Event {
+func (l Storage) WeekEvens(time time.Time) []*storage.Event {
 	defer l.mu.RUnlock()
 
 	l.mu.RLock()
@@ -93,7 +93,7 @@ func (l Storage) WeekEvens(time time.Time) []*entities.Event {
 	return eventsToResult(l.weeks[weekKey])
 }
 
-func (l Storage) MonthEvens(time time.Time) []*entities.Event {
+func (l Storage) MonthEvens(time time.Time) []*storage.Event {
 	defer l.mu.RUnlock()
 
 	l.mu.RLock()
@@ -102,41 +102,41 @@ func (l Storage) MonthEvens(time time.Time) []*entities.Event {
 	return eventsToResult(l.months[monthKey])
 }
 
-func eventsToResult(events map[uuid.UUID]*entities.Event) []*entities.Event {
+func eventsToResult(events map[uuid.UUID]*storage.Event) []*storage.Event {
 	if events == nil {
-		return make([]*entities.Event, 0)
+		return make([]*storage.Event, 0)
 	}
-	result := make([]*entities.Event, 0, len(events))
+	result := make([]*storage.Event, 0, len(events))
 	for _, event := range events {
 		result = append(result, event)
 	}
 	return result
 }
 
-func (l Storage) save(event *entities.Event) {
+func (l Storage) save(event *storage.Event) {
 	l.events[event.ID] = event
 	l.days[event.DayKey][event.ID] = event
 	l.weeks[event.WeekKey][event.ID] = event
 	l.months[event.MonthKey][event.ID] = event
 }
 
-func setKeys(event *entities.Event) {
+func setKeys(event *storage.Event) {
 	event.DayKey = dayKey(event.Time)
 	event.WeekKey = weekKey(event.Time)
 	event.MonthKey = monthKey(event.Time)
 }
 
-func (l Storage) makeMaps(event *entities.Event) {
+func (l Storage) makeMaps(event *storage.Event) {
 	if l.days[event.DayKey] == nil {
-		l.days[event.DayKey] = make(map[uuid.UUID]*entities.Event)
+		l.days[event.DayKey] = make(map[uuid.UUID]*storage.Event)
 	}
 
 	if l.weeks[event.WeekKey] == nil {
-		l.weeks[event.WeekKey] = make(map[uuid.UUID]*entities.Event)
+		l.weeks[event.WeekKey] = make(map[uuid.UUID]*storage.Event)
 	}
 
 	if l.months[event.MonthKey] == nil {
-		l.months[event.MonthKey] = make(map[uuid.UUID]*entities.Event)
+		l.months[event.MonthKey] = make(map[uuid.UUID]*storage.Event)
 	}
 }
 

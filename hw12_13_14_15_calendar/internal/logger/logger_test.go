@@ -2,14 +2,12 @@ package logger
 
 import (
 	"bytes"
-	"errors"
 	"io"
 	"os"
 	"testing"
 
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/configuration"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
 )
 
 const yaml = `
@@ -26,7 +24,7 @@ logger:
 
 const requiredOut = `info	informational message
 warn	warning message
-error	error message	{"error": "error"}
+error	error message
 `
 
 func TestLogger(t *testing.T) {
@@ -60,7 +58,7 @@ func TestLogger(t *testing.T) {
 		logger.Debug("debug message")
 		logger.Info("informational message")
 		logger.Warn("warning message")
-		logger.Error("error message", zap.Error(errors.New("error")))
+		logger.Error("error message")
 
 		w.Close()
 		os.Stdout = old
