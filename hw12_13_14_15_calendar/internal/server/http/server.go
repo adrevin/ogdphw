@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"strconv"
 
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/configuration"
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/logger"
@@ -29,8 +30,8 @@ func NewServer(l logger.Logger, app Application, cfg configuration.ServerConfigu
 
 func (s *Server) Start(ctx context.Context) error {
 	// TODO
-	address := net.JoinHostPort(config.Host, config.Port)
-	logg.Debug(fmt.Sprintf("server started and lisen %s", address))
+	address := net.JoinHostPort(config.Host, strconv.Itoa(config.Port))
+	logg.Debug(fmt.Sprintf("server started and lisen http://%s", address))
 
 	<-ctx.Done()
 

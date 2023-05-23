@@ -14,7 +14,7 @@ type Config struct {
 
 type ServerConfiguration struct {
 	Host            string        `yaml:"host"`
-	Port            string        `yaml:"port"`
+	Port            int           `yaml:"port"`
 	ShutdownTimeout time.Duration `yaml:"shutdownTimeout"`
 	IdleTimeout     time.Duration `yaml:"idleTimeout"`
 	WriteTimeout    time.Duration `yaml:"writeTimeout"`
