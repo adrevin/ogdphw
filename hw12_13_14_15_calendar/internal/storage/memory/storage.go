@@ -75,19 +75,42 @@ func (l Storage) Delete(id uuid.UUID) error {
 	return nil
 }
 
-func (l Storage) DayEvens(time time.Time) ([]entities.Event, error) { //nolint:revive
-	// TODO
-	return make([]entities.Event, 0), nil
+func (l Storage) DayEvens(time time.Time) []*entities.Event {
+	defer l.mu.RUnlock()
+
+	l.mu.RLock()
+	dayKey := dayKey(time)
+
+	return eventsToResult(l.days[dayKey])
 }
 
-func (l Storage) WeekEvens(time time.Time) ([]entities.Event, error) { //nolint:revive
-	// TODO
-	return make([]entities.Event, 0), nil
+func (l Storage) WeekEvens(time time.Time) []*entities.Event {
+	defer l.mu.RUnlock()
+
+	l.mu.RLock()
+	weekKey := weekKey(time)
+
+	return eventsToResult(l.weeks[weekKey])
 }
 
-func (l Storage) MonthEvens(time time.Time) ([]entities.Event, error) { //nolint:revive
-	// TODO
-	return make([]entities.Event, 0), nil
+func (l Storage) MonthEvens(time time.Time) []*entities.Event {
+	defer l.mu.RUnlock()
+
+	l.mu.RLock()
+	monthKey := monthKey(time)
+
+	return eventsToResult(l.months[monthKey])
+}
+
+func eventsToResult(events map[uuid.UUID]*entities.Event) []*entities.Event {
+	if events == nil {
+		return make([]*entities.Event, 0)
+	}
+	result := make([]*entities.Event, 0, len(events))
+	for _, event := range events {
+		result = append(result, event)
+	}
+	return result
 }
 
 func (l Storage) save(event *entities.Event) {
@@ -96,8 +119,6 @@ func (l Storage) save(event *entities.Event) {
 	l.weeks[event.WeekKey][event.ID] = event
 	l.months[event.MonthKey][event.ID] = event
 }
-
-var location = time.UTC
 
 func setKeys(event *entities.Event) {
 	event.DayKey = dayKey(event.Time)
@@ -111,7 +132,7 @@ func (l Storage) makeMaps(event *entities.Event) {
 	}
 
 	if l.weeks[event.WeekKey] == nil {
-		l.weeks[event.DayKey] = make(map[uuid.UUID]*entities.Event)
+		l.weeks[event.WeekKey] = make(map[uuid.UUID]*entities.Event)
 	}
 
 	if l.months[event.MonthKey] == nil {
@@ -120,14 +141,14 @@ func (l Storage) makeMaps(event *entities.Event) {
 }
 
 func dayKey(t time.Time) time.Time {
-	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, location)
+	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
 }
 
 func monthKey(t time.Time) time.Time {
-	return time.Date(t.Year(), t.Month(), 0, 0, 0, 0, 0, location)
+	return time.Date(t.Year(), t.Month(), 0, 0, 0, 0, 0, t.Location())
 }
 
 func weekKey(t time.Time) time.Time {
 	year, week := isoweek.FromDate(t.Year(), t.Month(), t.Day())
-	return isoweek.StartTime(year, week, location)
+	return isoweek.StartTime(year, week, t.Location())
 }
