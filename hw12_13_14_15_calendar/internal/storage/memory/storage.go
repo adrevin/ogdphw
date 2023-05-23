@@ -1,7 +1,6 @@
 package memorystorage
 
 import (
-	"errors"
 	"sync"
 	"time"
 
@@ -10,7 +9,7 @@ import (
 	"github.com/snabb/isoweek"
 )
 
-type Storage struct {
+type memStorage struct {
 	mu     *sync.RWMutex
 	events map[uuid.UUID]*storage.Event
 	days   map[time.Time]map[uuid.UUID]*storage.Event
@@ -18,8 +17,8 @@ type Storage struct {
 	months map[time.Time]map[uuid.UUID]*storage.Event
 }
 
-func New() *Storage {
-	return &Storage{
+func New() storage.Storage {
+	return &memStorage{
 		events: make(map[uuid.UUID]*storage.Event),
 		days:   make(map[time.Time]map[uuid.UUID]*storage.Event),
 		weeks:  make(map[time.Time]map[uuid.UUID]*storage.Event),
@@ -28,9 +27,7 @@ func New() *Storage {
 	}
 }
 
-var ErrEventNotFound = errors.New("unsupported file")
-
-func (l Storage) Create(event *storage.Event) uuid.UUID {
+func (l memStorage) Create(event *storage.Event) uuid.UUID {
 	defer l.mu.RUnlock()
 
 	l.mu.RLock()
@@ -42,13 +39,13 @@ func (l Storage) Create(event *storage.Event) uuid.UUID {
 	return event.ID
 }
 
-func (l Storage) Update(id uuid.UUID, event *storage.Event) error {
+func (l memStorage) Update(id uuid.UUID, event *storage.Event) error {
 	defer l.mu.RUnlock()
 
 	l.mu.RLock()
 
 	if l.events[id] == nil {
-		return ErrEventNotFound
+		return storage.ErrEventNotFound
 	}
 	l.Delete(event.ID)
 	event.ID = id
@@ -58,13 +55,13 @@ func (l Storage) Update(id uuid.UUID, event *storage.Event) error {
 	return nil
 }
 
-func (l Storage) Delete(id uuid.UUID) error {
+func (l memStorage) Delete(id uuid.UUID) error {
 	defer l.mu.RUnlock()
 
 	l.mu.RLock()
 	event := l.events[id]
 	if l.events[id] == nil {
-		return ErrEventNotFound
+		return storage.ErrEventNotFound
 	}
 
 	delete(l.events, event.ID)
@@ -75,7 +72,7 @@ func (l Storage) Delete(id uuid.UUID) error {
 	return nil
 }
 
-func (l Storage) DayEvens(time time.Time) []*storage.Event {
+func (l memStorage) DayEvens(time time.Time) []*storage.Event {
 	defer l.mu.RUnlock()
 
 	l.mu.RLock()
@@ -84,7 +81,7 @@ func (l Storage) DayEvens(time time.Time) []*storage.Event {
 	return eventsToResult(l.days[dayKey])
 }
 
-func (l Storage) WeekEvens(time time.Time) []*storage.Event {
+func (l memStorage) WeekEvens(time time.Time) []*storage.Event {
 	defer l.mu.RUnlock()
 
 	l.mu.RLock()
@@ -93,7 +90,7 @@ func (l Storage) WeekEvens(time time.Time) []*storage.Event {
 	return eventsToResult(l.weeks[weekKey])
 }
 
-func (l Storage) MonthEvens(time time.Time) []*storage.Event {
+func (l memStorage) MonthEvens(time time.Time) []*storage.Event {
 	defer l.mu.RUnlock()
 
 	l.mu.RLock()
@@ -113,7 +110,7 @@ func eventsToResult(events map[uuid.UUID]*storage.Event) []*storage.Event {
 	return result
 }
 
-func (l Storage) save(event *storage.Event) {
+func (l memStorage) save(event *storage.Event) {
 	l.events[event.ID] = event
 	l.days[event.DayKey][event.ID] = event
 	l.weeks[event.WeekKey][event.ID] = event
@@ -126,7 +123,7 @@ func setKeys(event *storage.Event) {
 	event.MonthKey = monthKey(event.Time)
 }
 
-func (l Storage) makeMaps(event *storage.Event) {
+func (l memStorage) makeMaps(event *storage.Event) {
 	if l.days[event.DayKey] == nil {
 		l.days[event.DayKey] = make(map[uuid.UUID]*storage.Event)
 	}

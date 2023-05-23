@@ -13,7 +13,9 @@ import (
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/configuration"
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/logger"
 	internalhttp "github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/server/http"
+	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/storage"
 	memorystorage "github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/storage/memory"
+	sqlstorage "github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/storage/sql"
 )
 
 var configFile string
@@ -37,8 +39,14 @@ func main() {
 	}
 	logg := logger.New(config.Logger)
 	defer logg.Sync()
-	storage := memorystorage.New()
-	calendar := app.New(logg, storage)
+
+	var storageStorage storage.Storage
+	if config.Storage.UsePostgresStorage {
+		storageStorage = sqlstorage.New()
+	} else {
+		storageStorage = memorystorage.New()
+	}
+	calendar := app.New(logg, storageStorage)
 
 	server := internalhttp.NewServer(logg, calendar, config.Server)
 

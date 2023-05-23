@@ -16,3 +16,6 @@ server:
   readTimeout: 15s
   writeTimeout: 60s
   idleTimeout: 5s
+storage:
+  usePostgres: false
+  postgresConnection: ""

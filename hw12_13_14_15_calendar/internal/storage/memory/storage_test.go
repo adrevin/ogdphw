@@ -28,7 +28,7 @@ func TestStorage(t *testing.T) {
 	t.Run("update", func(t *testing.T) {
 		memStorage := New()
 		err := memStorage.Update(uuid.New(), &storage.Event{})
-		require.ErrorIs(t, ErrEventNotFound, err)
+		require.ErrorIs(t, storage.ErrEventNotFound, err)
 
 		evtID := memStorage.Create(&evt)
 		err = memStorage.Update(evtID, &storage.Event{Title: "NewTitle"})
@@ -38,7 +38,7 @@ func TestStorage(t *testing.T) {
 	t.Run("delete", func(t *testing.T) {
 		memStorage := New()
 		err := memStorage.Delete(uuid.New())
-		require.ErrorIs(t, ErrEventNotFound, err)
+		require.ErrorIs(t, storage.ErrEventNotFound, err)
 
 		evtID := memStorage.Create(&evt)
 		err = memStorage.Delete(evtID)
@@ -69,6 +69,10 @@ func TestStorage(t *testing.T) {
 
 		de := memStorage.DayEvens(tm)
 		require.Equal(t, 2, len(de))
+		sort.Slice(de, func(i, j int) bool {
+			return de[i].Title < de[j].Title
+		})
+
 		require.Equal(t, firstEvUD, de[0].ID)
 		require.Equal(t, secondEvUD, de[1].ID)
 		require.Equal(t, "1970-01-10 - 1", de[0].Title)
@@ -76,7 +80,7 @@ func TestStorage(t *testing.T) {
 
 		we := memStorage.WeekEvens(time.Date(1970, time.January, 5, 10, 0, 0, 0, time.UTC))
 		sort.Slice(we, func(i, j int) bool {
-			return we[i].Time.Before(we[j].Time)
+			return we[i].Title < we[j].Title
 		})
 		require.Equal(t, de, we)
 

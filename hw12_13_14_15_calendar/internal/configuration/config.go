@@ -7,8 +7,9 @@ import (
 )
 
 type Config struct {
-	Logger zap.Config          `yaml:"logger"`
-	Server ServerConfiguration `yaml:"server"`
+	Logger  zap.Config           `yaml:"logger"`
+	Server  ServerConfiguration  `yaml:"server"`
+	Storage StorageConfiguration `yaml:"storage"`
 }
 
 type ServerConfiguration struct {
@@ -18,6 +19,11 @@ type ServerConfiguration struct {
 	IdleTimeout     time.Duration `yaml:"idleTimeout"`
 	WriteTimeout    time.Duration `yaml:"writeTimeout"`
 	ReadTimeout     time.Duration `yaml:"readTimeout"`
+}
+
+type StorageConfiguration struct {
+	UsePostgresStorage bool   `yaml:"usePostgres"`
+	PostgresConnection string `yaml:"postgresConnection"`
 }
 
 func NewConfig(configFile string) (Config, error) {
