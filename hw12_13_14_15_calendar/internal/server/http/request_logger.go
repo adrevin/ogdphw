@@ -41,20 +41,21 @@ func logRequest(next http.Handler, logger logger.Logger) http.Handler {
 		rw := newResponseWriter(w, logger)
 		next.ServeHTTP(rw, r)
 
-		remoteAddr := r.RemoteAddr
-		header := r.Header.Get("X-Forwarded-For")
-		realIP := net.ParseIP(header)
-		if realIP != nil {
-			remoteAddr = realIP.String()
+		var address string
+		address, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			address = "unknown"
 		}
-
 		logger.Debugf(
-			"%s '%s %s', %d, %d bytes, %s",
-			remoteAddr,
+			"%s [%s] %s %s %s %d %d %s %s",
+			address,
+			time.Now().UTC(),
 			r.Method,
 			r.URL,
+			r.Proto,
 			rw.statusCode,
 			rw.length,
-			time.Since(start))
+			time.Since(start),
+			r.UserAgent())
 	})
 }
