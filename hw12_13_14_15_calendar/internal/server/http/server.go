@@ -64,6 +64,7 @@ func (s *Server) Stop(ctx context.Context) error {
 func getServeMux(logg logger.Logger) *http.ServeMux {
 	serveMux := http.NewServeMux()
 	serveMux.Handle("/", logRequest(http.HandlerFunc(NotImplemented), logg))
+	serveMux.Handle("/error", logRequest(http.HandlerFunc(Error), logg))
 	serveMux.Handle("/hello", logRequest(http.HandlerFunc(Hello), logg))
 	return serveMux
 }

@@ -12,10 +12,11 @@ type responseWriter struct {
 	http.ResponseWriter
 	statusCode int
 	length     int
+	logger     logger.Logger
 }
 
-func newResponseWriter(w http.ResponseWriter) *responseWriter {
-	return &responseWriter{w, http.StatusOK, 0}
+func newResponseWriter(w http.ResponseWriter, logger logger.Logger) *responseWriter {
+	return &responseWriter{w, http.StatusOK, 0, logger}
 }
 
 func (rw *responseWriter) WriteHeader(code int) {
@@ -24,16 +25,20 @@ func (rw *responseWriter) WriteHeader(code int) {
 }
 
 func (rw *responseWriter) Write(bytes []byte) (int, error) {
-	l, e := rw.ResponseWriter.Write(bytes)
+	l, err := rw.ResponseWriter.Write(bytes)
+	if err != nil {
+		rw.logger.Errorf("write response error: %+v", err)
+		return 0, err
+	}
 	rw.length += l
-	return l, e
+	return l, nil
 }
 
 func logRequest(next http.Handler, logger logger.Logger) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
-		rw := newResponseWriter(w)
+		rw := newResponseWriter(w, logger)
 		next.ServeHTTP(rw, r)
 
 		remoteAddr := r.RemoteAddr
