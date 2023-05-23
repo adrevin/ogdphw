@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/app"
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/configuration"
@@ -37,6 +36,7 @@ func main() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
 	logg := logger.New(config.Logger)
 	defer logg.Sync()
 
@@ -50,18 +50,17 @@ func main() {
 
 	server := internalhttp.NewServer(logg, calendar, config.Server)
 
-	ctx, cancel := signal.NotifyContext(context.Background(),
-		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	defer cancel()
 
 	go func() {
 		<-ctx.Done()
 
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+		ctx, cancel := context.WithTimeout(context.Background(), config.Server.ShutdownTimeout)
 		defer cancel()
 
 		if err := server.Stop(ctx); err != nil {
-			logg.Error("failed to stop http server: " + err.Error())
+			logg.Errorf("failed to stop http server: %+v", err)
 		}
 	}()
 
@@ -72,4 +71,5 @@ func main() {
 		cancel()
 		os.Exit(1) //nolint:gocritic
 	}
+	logg.Info("calendar is stopped")
 }

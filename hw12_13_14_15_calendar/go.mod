@@ -11,6 +11,7 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/go-http-utils/headers v0.0.0-20181008091004-fed159eddc2a // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/snabb/isoweek v1.0.3 // indirect
 	go.uber.org/atomic v1.7.0 // indirect

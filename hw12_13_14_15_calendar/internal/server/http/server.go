@@ -2,45 +2,68 @@ package internalhttp
 
 import (
 	"context"
-	"fmt"
 	"net"
+	"net/http"
 	"strconv"
 
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/configuration"
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/logger"
 )
 
-type Server struct { // TODO
+type Server struct {
+	logger     logger.Logger
+	config     configuration.ServerConfiguration
+	httpServer *http.Server
 }
 
 type Application interface { // TODO
 }
 
-var (
-	logg   logger.Logger
-	config configuration.ServerConfiguration
-)
-
 func NewServer(l logger.Logger, app Application, cfg configuration.ServerConfiguration) *Server { //nolint:revive
-	logg = l
-	config = cfg
-	logg.Debug("server created")
-	return &Server{}
+	return &Server{logger: l, config: cfg}
 }
 
 func (s *Server) Start(ctx context.Context) error {
-	// TODO
-	address := net.JoinHostPort(config.Host, strconv.Itoa(config.Port))
-	logg.Debug(fmt.Sprintf("server started and lisen http://%s", address))
+	address := net.JoinHostPort(s.config.Host, strconv.Itoa(s.config.Port))
+
+	s.httpServer = &http.Server{
+		Addr:         address,
+		Handler:      getServeMux(s.logger),
+		ReadTimeout:  s.config.ReadTimeout,
+		WriteTimeout: s.config.WriteTimeout,
+		IdleTimeout:  s.config.IdleTimeout,
+	}
+
+	go func() {
+		if err := s.httpServer.ListenAndServe(); err != nil {
+			if err == http.ErrServerClosed {
+				// normal interrupt operation, ignored
+				s.logger.Debug("server stopped")
+				return
+			}
+			s.logger.Fatalf("can not start http server: %+v", err)
+		}
+	}()
+
+	s.logger.Debugf("server started and listen http://%s", address)
 
 	<-ctx.Done()
 
 	return nil
 }
 
-func (s *Server) Stop(ctx context.Context) error { //nolint:revive
-	// TODO
+func (s *Server) Stop(ctx context.Context) error {
+	s.logger.Debug("server is shutting down...")
+	err := s.httpServer.Shutdown(ctx)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-// TODO
+func getServeMux(logg logger.Logger) *http.ServeMux {
+	serveMux := http.NewServeMux()
+	serveMux.Handle("/", logRequest(http.HandlerFunc(NotImplemented), logg))
+	serveMux.Handle("/hello", logRequest(http.HandlerFunc(Hello), logg))
+	return serveMux
+}

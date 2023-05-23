@@ -2,6 +2,7 @@ package logger
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"os"
 	"testing"
@@ -24,7 +25,7 @@ logger:
 
 const requiredOut = `info	informational message
 warn	warning message
-error	error message
+error	an error occurred: example error
 `
 
 func TestLogger(t *testing.T) {
@@ -35,7 +36,7 @@ func TestLogger(t *testing.T) {
 		require.NoErrorf(t, err, "can not write temporary file")
 
 		config, err := configuration.NewConfig(tmp.Name())
-		require.NoErrorf(t, err, "can not delete temporary file")
+		require.NoErrorf(t, err, "can not crete new config")
 
 		err = os.Remove(tmp.Name())
 		require.NoErrorf(t, err, "can not delete temporary file")
@@ -58,7 +59,8 @@ func TestLogger(t *testing.T) {
 		logger.Debug("debug message")
 		logger.Info("informational message")
 		logger.Warn("warning message")
-		logger.Error("error message")
+		err = errors.New("example error")
+		logger.Errorf("an error occurred: %+v", err)
 
 		w.Close()
 		os.Stdout = old
