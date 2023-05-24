@@ -14,14 +14,14 @@ import (
 func TestStorage(t *testing.T) {
 	evt := storage.Event{
 		Title:    "Title",
-		Time:     time.Now().UTC(),
+		Time:     time.Now(),
 		Duration: time.Hour,
 		UserID:   uuid.New(),
 	}
 
 	t.Run("create", func(t *testing.T) {
 		memStorage := New()
-		evtID := memStorage.Create(&evt)
+		evtID, _ := memStorage.Create(&evt)
 		require.NotEqual(t, uuid.Nil, evtID)
 	})
 
@@ -30,7 +30,7 @@ func TestStorage(t *testing.T) {
 		err := memStorage.Update(uuid.New(), &storage.Event{})
 		require.ErrorIs(t, storage.ErrEventNotFound, err)
 
-		evtID := memStorage.Create(&evt)
+		evtID, _ := memStorage.Create(&evt)
 		err = memStorage.Update(evtID, &storage.Event{Title: "NewTitle"})
 		require.NoError(t, err)
 	})
@@ -40,7 +40,7 @@ func TestStorage(t *testing.T) {
 		err := memStorage.Delete(uuid.New())
 		require.ErrorIs(t, storage.ErrEventNotFound, err)
 
-		evtID := memStorage.Create(&evt)
+		evtID, _ := memStorage.Create(&evt)
 		err = memStorage.Delete(evtID)
 		require.NoError(t, err)
 	})
@@ -57,46 +57,46 @@ func TestStorage(t *testing.T) {
 		memStorage := New()
 
 		tm := time.Date(1970, time.January, 10, 10, 0, 0, 0, time.UTC)
-		firstEvUD := memStorage.Create(&storage.Event{
-			Time: tm, Title: "1970-01-10 - 1",
+		firstEvID, _ := memStorage.Create(&storage.Event{
+			Time: tm, Title: "0",
 		})
-		require.NotEqual(t, uuid.Nil, firstEvUD)
+		require.NotEqual(t, uuid.Nil, firstEvID)
 
-		secondEvUD := memStorage.Create(&storage.Event{
-			Time: tm, Title: "1970-01-10 - 2",
+		secondEvID, _ := memStorage.Create(&storage.Event{
+			Time: tm, Title: "1",
 		})
-		require.NotEqual(t, uuid.Nil, secondEvUD)
+		require.NotEqual(t, uuid.Nil, secondEvID)
 
-		de := memStorage.DayEvens(tm)
+		de, _ := memStorage.DayEvens(tm)
 		require.Equal(t, 2, len(de))
 		sort.Slice(de, func(i, j int) bool {
 			return de[i].Title < de[j].Title
 		})
 
-		require.Equal(t, firstEvUD, de[0].ID)
-		require.Equal(t, secondEvUD, de[1].ID)
-		require.Equal(t, "1970-01-10 - 1", de[0].Title)
-		require.Equal(t, "1970-01-10 - 2", de[1].Title)
+		require.Equal(t, firstEvID, de[0].ID)
+		require.Equal(t, secondEvID, de[1].ID)
+		require.Equal(t, "0", de[0].Title)
+		require.Equal(t, "1", de[1].Title)
 
-		we := memStorage.WeekEvens(time.Date(1970, time.January, 5, 10, 0, 0, 0, time.UTC))
+		we, _ := memStorage.WeekEvens(time.Date(1970, time.January, 5, 10, 0, 0, 0, time.UTC))
 		sort.Slice(we, func(i, j int) bool {
 			return we[i].Title < we[j].Title
 		})
 		require.Equal(t, de, we)
 
-		me := memStorage.MonthEvens(time.Date(1970, time.January, 5, 10, 0, 0, 0, time.UTC))
-		sort.Slice(me, func(i, j int) bool {
-			return me[i].Time.Before(me[j].Time)
+		me, _ := memStorage.MonthEvens(time.Date(1970, time.January, 5, 10, 0, 0, 0, time.UTC))
+		sort.Slice(we, func(i, j int) bool {
+			return me[i].Title < me[j].Title
 		})
 		require.Equal(t, we, me)
 
-		memStorage.Delete(secondEvUD)
-		de = memStorage.DayEvens(tm)
+		memStorage.Delete(secondEvID)
+		de, _ = memStorage.DayEvens(tm)
 		require.Equal(t, 1, len(de))
-		require.Equal(t, firstEvUD, de[0].ID)
+		require.Equal(t, firstEvID, de[0].ID)
 
-		memStorage.Delete(firstEvUD)
-		de = memStorage.DayEvens(tm)
+		memStorage.Delete(firstEvID)
+		de, _ = memStorage.DayEvens(tm)
 		require.Equal(t, 0, len(de))
 	})
 
@@ -109,7 +109,7 @@ func TestStorage(t *testing.T) {
 				Title: strconv.Itoa(day),
 			})
 		}
-		me := memStorage.MonthEvens(time.Date(1970, time.January, 1, 10, 0, 0, 0, time.UTC))
+		me, _ := memStorage.MonthEvens(time.Date(1970, time.January, 1, 10, 0, 0, 0, time.UTC))
 		require.Equal(t, len(days), len(me))
 		sort.Slice(me, func(i, j int) bool {
 			return me[i].Time.Before(me[j].Time)
@@ -119,7 +119,7 @@ func TestStorage(t *testing.T) {
 			require.Equal(t, strconv.Itoa(days[i]), e.Title)
 		}
 
-		we := memStorage.WeekEvens(time.Date(1970, time.January, 5, 10, 0, 0, 0, time.UTC))
+		we, _ := memStorage.WeekEvens(time.Date(1970, time.January, 5, 10, 0, 0, 0, time.UTC))
 		require.Equal(t, 2, len(we))
 		sort.Slice(me, func(i, j int) bool {
 			return me[i].Time.Before(me[j].Time)

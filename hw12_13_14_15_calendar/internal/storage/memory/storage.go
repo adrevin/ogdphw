@@ -27,7 +27,7 @@ func New() storage.Storage {
 	}
 }
 
-func (l memStorage) Create(event *storage.Event) uuid.UUID {
+func (l memStorage) Create(event *storage.Event) (uuid.UUID, error) {
 	defer l.mu.RUnlock()
 
 	l.mu.RLock()
@@ -36,7 +36,7 @@ func (l memStorage) Create(event *storage.Event) uuid.UUID {
 	l.makeMaps(event)
 	l.save(event)
 
-	return event.ID
+	return event.ID, nil
 }
 
 func (l memStorage) Update(id uuid.UUID, event *storage.Event) error {
@@ -72,31 +72,31 @@ func (l memStorage) Delete(id uuid.UUID) error {
 	return nil
 }
 
-func (l memStorage) DayEvens(time time.Time) []*storage.Event {
+func (l memStorage) DayEvens(time time.Time) ([]*storage.Event, error) {
 	defer l.mu.RUnlock()
 
 	l.mu.RLock()
 	dayKey := dayKey(time)
 
-	return eventsToResult(l.days[dayKey])
+	return eventsToResult(l.days[dayKey]), nil
 }
 
-func (l memStorage) WeekEvens(time time.Time) []*storage.Event {
+func (l memStorage) WeekEvens(time time.Time) ([]*storage.Event, error) {
 	defer l.mu.RUnlock()
 
 	l.mu.RLock()
 	weekKey := weekKey(time)
 
-	return eventsToResult(l.weeks[weekKey])
+	return eventsToResult(l.weeks[weekKey]), nil
 }
 
-func (l memStorage) MonthEvens(time time.Time) []*storage.Event {
+func (l memStorage) MonthEvens(time time.Time) ([]*storage.Event, error) {
 	defer l.mu.RUnlock()
 
 	l.mu.RLock()
 	monthKey := monthKey(time)
 
-	return eventsToResult(l.months[monthKey])
+	return eventsToResult(l.months[monthKey]), nil
 }
 
 func eventsToResult(events map[uuid.UUID]*storage.Event) []*storage.Event {

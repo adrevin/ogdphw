@@ -18,5 +18,5 @@ server:
   writeTimeout: 60s
   idleTimeout: 5s
 storage:
-  usePostgres: false
-  postgresConnection: ""
+  usePostgres: true
+  postgresConnection: "postgres://hw12:hw12@localhost/hw12?sslmode=disable"

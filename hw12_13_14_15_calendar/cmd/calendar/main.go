@@ -42,7 +42,7 @@ func main() {
 
 	var storageStorage storage.Storage
 	if config.Storage.UsePostgresStorage {
-		storageStorage = sqlstorage.New()
+		storageStorage = sqlstorage.New(config.Storage, logg)
 	} else {
 		storageStorage = memorystorage.New()
 	}

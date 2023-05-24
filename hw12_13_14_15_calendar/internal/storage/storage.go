@@ -7,10 +7,10 @@ import (
 )
 
 type Storage interface {
-	Create(event *Event) uuid.UUID
+	Create(event *Event) (uuid.UUID, error)
 	Update(id uuid.UUID, event *Event) error
 	Delete(id uuid.UUID) error
-	DayEvens(time time.Time) []*Event
-	WeekEvens(time time.Time) []*Event
-	MonthEvens(time time.Time) []*Event
+	DayEvens(time time.Time) ([]*Event, error)
+	WeekEvens(time time.Time) ([]*Event, error)
+	MonthEvens(time time.Time) ([]*Event, error)
 }
