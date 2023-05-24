@@ -42,6 +42,7 @@ func main() {
 
 	var storageStorage storage.Storage
 	if config.Storage.UsePostgresStorage {
+		sqlstorage.MigrateDatabase(config.Storage, logg)
 		storageStorage = sqlstorage.New(config.Storage, logg)
 	} else {
 		storageStorage = memorystorage.New()

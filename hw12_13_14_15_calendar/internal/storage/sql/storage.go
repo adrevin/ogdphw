@@ -2,6 +2,9 @@ package sqlstorage
 
 import (
 	"database/sql"
+	"os"
+	"path"
+	"sort"
 	"time"
 
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/configuration"
@@ -32,26 +35,6 @@ func New(config configuration.StorageConfiguration, logger logger.Logger) storag
 	logger.Debug("connected to database")
 	return &sqlStorage{config: config, logger: logger, db: db}
 }
-
-/*func (s *sqlStorage) Connect(ctx context.Context) (*sql.Conn, error) { //nolint:revive,unused
-	conn, err := s.db.Conn(ctx)
-	if err != nil {
-		return nil, err
-	}
-	conn.Close()
-	return nil, err
-}
-
-func (s *sqlStorage) Close(ctx context.Context) error { //nolint:revive,unused
-	if s.db == nil {
-		return storage.ErrNoConnection
-	}
-	err := s.db.Close()
-	if err != nil {
-		return err
-	}
-	return nil
-}*/
 
 func (s *sqlStorage) Create(event *storage.Event) (uuid.UUID, error) {
 	dayKey := dayKey(event.Time)
@@ -196,4 +179,59 @@ func monthKey(t time.Time) time.Time {
 func weekKey(t time.Time) time.Time {
 	year, week := isoweek.FromDate(t.Year(), t.Month(), t.Day())
 	return isoweek.StartTime(year, week, t.Location())
+}
+
+func MigrateDatabase(config configuration.StorageConfiguration, logger logger.Logger) {
+	db, err := sql.Open("postgres", config.PostgresConnection)
+	if err != nil {
+		logger.Fatalf("can not open database connection: %+v", err)
+	}
+	defer db.Close()
+
+	err = db.Ping()
+	if err != nil {
+		logger.Fatalf("can not ping database: %+v", err)
+		return
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		logger.Fatalf("can not get wd: %+v", err)
+		return
+	}
+
+	migrationsDir := path.Join(wd, "migrations")
+	files, err := os.ReadDir(migrationsDir)
+	if err != nil {
+		logger.Fatalf("can not read dir: %+v", err)
+		return
+	}
+
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].Name() < files[j].Name()
+	})
+
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+		fileInfo, err := file.Info()
+		_ = fileInfo
+		if err != nil {
+			logger.Fatalf("can not read file: %+v", err)
+			return
+		}
+		fileName := file.Name()
+		bytes, err := os.ReadFile(path.Join(migrationsDir, fileName))
+		if err != nil {
+			logger.Fatalf("can not read file: %+v", err)
+			return
+		}
+		_, err = db.Exec(string(bytes))
+		if err != nil {
+			logger.Fatalf("can not exec '%s': %+v", fileName, err)
+			return
+		}
+		logger.Debugf("applied migration '%s'", fileName)
+	}
 }
