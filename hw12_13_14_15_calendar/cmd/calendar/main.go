@@ -41,12 +41,20 @@ func main() {
 	defer logg.Sync()
 
 	var storageStorage storage.Storage
-	if config.Storage.UsePostgresStorage {
+	if flag.Arg(0) == "migrate-db" {
+		logg.Info("starting database migration ...")
+		storageStorage = sqlstorage.New(config.Storage, logg)
 		sqlstorage.MigrateDatabase(config.Storage, logg)
+		logg.Info("database migration done")
+		return
+	}
+
+	if config.Storage.UsePostgresStorage {
 		storageStorage = sqlstorage.New(config.Storage, logg)
 	} else {
 		storageStorage = memorystorage.New()
 	}
+
 	calendar := app.New(logg, storageStorage)
 
 	server := internalhttp.NewServer(logg, calendar, config.Server)
