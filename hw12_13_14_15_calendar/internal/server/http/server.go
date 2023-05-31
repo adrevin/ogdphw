@@ -2,6 +2,7 @@ package internalhttp
 
 import (
 	"context"
+	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/app"
 	"net"
 	"net/http"
 	"strconv"
@@ -14,13 +15,11 @@ type Server struct {
 	logger     logger.Logger
 	config     configuration.ServerConfiguration
 	httpServer *http.Server
+	app        app.App
 }
 
-type Application interface { // TODO
-}
-
-func NewServer(l logger.Logger, app Application, cfg configuration.ServerConfiguration) *Server { //nolint:revive
-	return &Server{logger: l, config: cfg}
+func NewServer(l logger.Logger, app app.App, cfg configuration.ServerConfiguration) *Server { //nolint:revive
+	return &Server{logger: l, config: cfg, app: app}
 }
 
 func (s *Server) Start(ctx context.Context) error {
@@ -28,7 +27,7 @@ func (s *Server) Start(ctx context.Context) error {
 
 	s.httpServer = &http.Server{
 		Addr:         address,
-		Handler:      getServeMux(s.logger),
+		Handler:      s.getServeMux(s.logger),
 		ReadTimeout:  s.config.ReadTimeout,
 		WriteTimeout: s.config.WriteTimeout,
 		IdleTimeout:  s.config.IdleTimeout,
@@ -61,10 +60,11 @@ func (s *Server) Stop(ctx context.Context) error {
 	return nil
 }
 
-func getServeMux(logg logger.Logger) *http.ServeMux {
+func (s *Server) getServeMux(logg logger.Logger) *http.ServeMux {
 	serveMux := http.NewServeMux()
 	serveMux.Handle("/", logRequest(http.HandlerFunc(NotImplemented), logg))
 	serveMux.Handle("/error", logRequest(http.HandlerFunc(Error), logg))
 	serveMux.Handle("/hello", logRequest(http.HandlerFunc(Hello), logg))
+	serveMux.Handle(app.EventsUrlPattern, logRequest(http.HandlerFunc(s.app.HandleCalendarRequest), logg))
 	return serveMux
 }

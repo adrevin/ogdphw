@@ -4,10 +4,6 @@ import (
 	"net/http"
 )
 
-func NotFound(w http.ResponseWriter, _ *http.Request) {
-	http.Error(w, "not found", http.StatusNotFound)
-}
-
 func NotImplemented(w http.ResponseWriter, _ *http.Request) {
 	http.Error(w, "not implemented", http.StatusNotImplemented)
 }
