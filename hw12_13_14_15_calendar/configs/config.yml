@@ -1,0 +1,22 @@
+logger:
+  ## see https://github.com/uber-go/zap/blob/master/config.go
+  level: debug
+  encoding: console
+  development: false
+  encoderConfig:
+    timeKey:        ""
+    levelKey:       "L"
+    nameKey:        "N"
+    callerKey:      "C"
+    messageKey:     "M"
+    stacktraceKey:  ""
+server:
+  host: "0.0.0.0"
+  port: 5000
+  shutdownTimeout: 6s
+  readTimeout: 15s
+  writeTimeout: 60s
+  idleTimeout: 5s
+storage:
+  usePostgres: true
+  postgresConnection: "postgres://hw12:hw12@localhost/hw12?sslmode=disable"

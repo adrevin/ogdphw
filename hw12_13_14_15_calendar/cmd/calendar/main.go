@@ -3,21 +3,24 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/app"
-	"github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/logger"
-	internalhttp "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/server/http"
-	memorystorage "github.com/fixme_my_friend/hw12_13_14_15_calendar/internal/storage/memory"
+	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/app"
+	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/configuration"
+	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/logger"
+	internalhttp "github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/server/http"
+	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/storage"
+	memorystorage "github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/storage/memory"
+	sqlstorage "github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/storage/sql"
 )
 
 var configFile string
 
 func init() {
-	flag.StringVar(&configFile, "config", "/etc/calendar/config.toml", "Path to configuration file")
+	flag.StringVar(&configFile, "config", "/etc/calendar/config.yml", "Path to configuration yaml file")
 }
 
 func main() {
@@ -28,26 +31,44 @@ func main() {
 		return
 	}
 
-	config := NewConfig()
-	logg := logger.New(config.Logger.Level)
+	config, err := configuration.NewConfig(configFile)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
-	storage := memorystorage.New()
-	calendar := app.New(logg, storage)
+	logg := logger.New(config.Logger)
+	defer logg.Sync()
 
-	server := internalhttp.NewServer(logg, calendar)
+	if flag.Arg(0) == "migrate-db" {
+		logg.Info("starting database migration ...")
+		sqlstorage.MigrateDatabase(config.Storage, logg)
+		logg.Info("database migration done")
+		return
+	}
 
-	ctx, cancel := signal.NotifyContext(context.Background(),
-		syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+	var storageStorage storage.Storage
+	if config.Storage.UsePostgresStorage {
+		storageStorage = sqlstorage.New(config.Storage, logg)
+	} else {
+		storageStorage = memorystorage.New()
+	}
+
+	calendar := app.New(logg, storageStorage)
+
+	server := internalhttp.NewServer(logg, calendar, config.Server)
+
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	defer cancel()
 
 	go func() {
 		<-ctx.Done()
 
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*3)
+		ctx, cancel := context.WithTimeout(context.Background(), config.Server.ShutdownTimeout)
 		defer cancel()
 
 		if err := server.Stop(ctx); err != nil {
-			logg.Error("failed to stop http server: " + err.Error())
+			logg.Errorf("failed to stop http server: %+v", err)
 		}
 	}()
 
@@ -58,4 +79,5 @@ func main() {
 		cancel()
 		os.Exit(1) //nolint:gocritic
 	}
+	logg.Info("calendar is stopped")
 }
