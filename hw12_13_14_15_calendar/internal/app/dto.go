@@ -14,11 +14,8 @@ type EventRequest struct {
 }
 
 type EventResponse struct {
-	ID       uuid.UUID     `json:"id"`
-	Title    string        `json:"title"`
-	Time     time.Time     `json:"time"`
-	Duration time.Duration `json:"duration"`
-	UserID   uuid.UUID     `json:"userId"`
+	EventRequest
+	ID uuid.UUID `json:"id"`
 }
 
 type EventID struct {
