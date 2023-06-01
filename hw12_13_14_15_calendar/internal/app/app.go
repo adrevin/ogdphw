@@ -59,14 +59,14 @@ func (app *App) readEvents(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t, err := time.Parse(time.DateOnly, query[1])
-
-	// sanitize time
-	t = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
-
 	if err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
+
+	// sanitize time
+	t = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+
 	switch command {
 	case "day":
 		evens, err := app.storage.DayEvens(t)
