@@ -2,11 +2,11 @@ package internalhttp
 
 import (
 	"context"
-	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/app"
 	"net"
 	"net/http"
 	"strconv"
 
+	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/app"
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/configuration"
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/logger"
 )
@@ -18,7 +18,7 @@ type Server struct {
 	app        app.App
 }
 
-func NewServer(l logger.Logger, app app.App, cfg configuration.ServerConfiguration) *Server { //nolint:revive
+func NewServer(l logger.Logger, app app.App, cfg configuration.ServerConfiguration) *Server {
 	return &Server{logger: l, config: cfg, app: app}
 }
 
@@ -65,6 +65,6 @@ func (s *Server) getServeMux(logg logger.Logger) *http.ServeMux {
 	serveMux.Handle("/", logRequest(http.HandlerFunc(NotImplemented), logg))
 	serveMux.Handle("/error", logRequest(http.HandlerFunc(Error), logg))
 	serveMux.Handle("/hello", logRequest(http.HandlerFunc(Hello), logg))
-	serveMux.Handle(app.EventsUrlPattern, logRequest(http.HandlerFunc(s.app.HandleCalendarRequest), logg))
+	serveMux.Handle(app.EventsURLPattern, logRequest(http.HandlerFunc(s.app.HandleCalendarRequest), logg))
 	return serveMux
 }

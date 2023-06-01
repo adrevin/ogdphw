@@ -3,9 +3,6 @@ package app
 import (
 	"context"
 	"encoding/json"
-	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/storage"
-	"github.com/go-http-utils/headers"
-	"github.com/google/uuid"
 	"io"
 	"net/http"
 	"reflect"
@@ -13,7 +10,10 @@ import (
 	"time"
 
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/logger"
+	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/storage"
+	"github.com/go-http-utils/headers"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 )
 
 type App struct {
@@ -22,7 +22,7 @@ type App struct {
 	validate *validator.Validate
 }
 
-func New(logger logger.Logger, storage storage.Storage) *App { //nolint:revive
+func New(logger logger.Logger, storage storage.Storage) *App {
 	v := validator.New()
 	v.RegisterCustomTypeFunc(validateUUID, uuid.UUID{})
 	app := &App{logger: logger, storage: storage, validate: v}
@@ -43,7 +43,7 @@ func (app *App) CreateEvent(ctx context.Context, id, title string) error { //nol
 	return nil
 }
 
-const EventsUrlPattern = "/api/events/"
+const EventsURLPattern = "/api/events/"
 
 func (app *App) HandleCalendarRequest(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
@@ -73,7 +73,6 @@ func (app *App) HandleCalendarRequest(w http.ResponseWriter, r *http.Request) {
 		}
 
 		e := &storage.Event{
-
 			Title:    request.Title,
 			Time:     request.Time,
 			Duration: time.Duration(request.Duration) * time.Second,
@@ -83,25 +82,20 @@ func (app *App) HandleCalendarRequest(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
-		break
 	// read
 	case http.MethodGet:
 		app.handleReadRequest(w, r)
-		break
 	// update
 	case http.MethodPut:
-		break
 	// update
 	case http.MethodDelete:
-		break
 	default:
 		//		NotImplemented(w, r)
-		break
 	}
 }
 
 func (app *App) handleReadRequest(w http.ResponseWriter, r *http.Request) {
-	query := strings.Split(strings.Replace(r.RequestURI, EventsUrlPattern, "", -1), "/")
+	query := strings.Split(strings.ReplaceAll(r.RequestURI, EventsURLPattern, ""), "/")
 	if len(query) != 2 {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
@@ -131,7 +125,6 @@ func (app *App) handleReadRequest(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		writeEvens(evens, app, w)
-		break
 	case "week":
 		evens, err := app.storage.WeekEvens(t)
 		if err != nil {
@@ -140,7 +133,6 @@ func (app *App) handleReadRequest(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		writeEvens(evens, app, w)
-		break
 	case "month":
 		evens, err := app.storage.MonthEvens(t)
 		if err != nil {
@@ -149,10 +141,8 @@ func (app *App) handleReadRequest(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		writeEvens(evens, app, w)
-		break
 	default:
 		http.Error(w, "bad request", http.StatusBadRequest)
-		break
 	}
 }
 
@@ -170,7 +160,12 @@ func writeEvens(evens []*storage.Event, app *App, w http.ResponseWriter) {
 	for _, event := range evens {
 		// TODO: use mapping
 		er := EventResponse{
-			ID: event.ID, Title: event.Title, Time: event.Time, Duration: event.Duration, UserID: event.UserID}
+			ID:       event.ID,
+			Title:    event.Title,
+			Time:     event.Time,
+			Duration: event.Duration,
+			UserID:   event.UserID,
+		}
 		response = append(response, er)
 	}
 	body, err := json.Marshal(response)

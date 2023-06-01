@@ -1,8 +1,9 @@
 package app
 
 import (
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type EventRequest struct {
