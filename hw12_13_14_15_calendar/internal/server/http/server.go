@@ -65,6 +65,6 @@ func (s *Server) getServeMux(logg logger.Logger) *http.ServeMux {
 	serveMux.Handle("/", logRequest(http.HandlerFunc(NotImplemented), logg))
 	serveMux.Handle("/error", logRequest(http.HandlerFunc(Error), logg))
 	serveMux.Handle("/hello", logRequest(http.HandlerFunc(Hello), logg))
-	serveMux.Handle(app.EventsURLPattern, logRequest(http.HandlerFunc(s.app.HandleCalendarRequest), logg))
+	serveMux.Handle(app.URLPattern, logRequest(http.HandlerFunc(s.app.HandleCalendarRequest), logg))
 	return serveMux
 }

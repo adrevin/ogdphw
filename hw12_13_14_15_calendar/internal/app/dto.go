@@ -20,3 +20,7 @@ type EventResponse struct {
 	Duration time.Duration `json:"duration"`
 	UserID   uuid.UUID     `json:"userId"`
 }
+
+type EventID struct {
+	ID uuid.UUID `json:"id"`
+}
