@@ -105,7 +105,7 @@ func (app *App) createEvent(w http.ResponseWriter, r *http.Request) {
 	e := &storage.Event{
 		Title:    eventRequest.Title,
 		Time:     eventRequest.Time,
-		Duration: time.Duration(eventRequest.Duration) * time.Second,
+		Duration: time.Duration(eventRequest.Duration),
 		UserID:   eventRequest.UserID,
 	}
 	eventID, err := app.storage.Create(e)
@@ -140,7 +140,7 @@ func (app *App) updateEvent(w http.ResponseWriter, r *http.Request) {
 	storageEvent := &storage.Event{
 		Title:    eventRequest.Title,
 		Time:     eventRequest.Time,
-		Duration: time.Duration(eventRequest.Duration) * time.Second,
+		Duration: time.Duration(eventRequest.Duration),
 		UserID:   eventRequest.UserID,
 	}
 	err := app.storage.Update(*eventID, storageEvent)
