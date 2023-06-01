@@ -5,7 +5,6 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"reflect"
 	"strings"
 	"time"
 
@@ -26,18 +25,9 @@ type App struct {
 
 func New(logger logger.Logger, storage storage.Storage) *App {
 	v := validator.New()
-	v.RegisterCustomTypeFunc(validateUUID, uuid.UUID{})
 	app := &App{logger: logger, storage: storage, validate: v}
 	logger.Info("calendar application created")
 	return app
-}
-
-func validateUUID(field reflect.Value) interface{} {
-	if valuer, ok := field.Interface().(uuid.UUID); ok {
-		return valuer.String()
-	}
-
-	return nil
 }
 
 func (app *App) HandleCalendarRequest(w http.ResponseWriter, r *http.Request) {
@@ -104,33 +94,6 @@ func (app *App) readEvents(w http.ResponseWriter, r *http.Request) {
 		writeEvens(evens, app, w)
 	default:
 		http.Error(w, "bad request", http.StatusBadRequest)
-	}
-}
-
-func writeEvens(evens []*storage.Event, app *App, w http.ResponseWriter) {
-	response := make([]EventResponse, 0, len(evens))
-	for _, event := range evens {
-		// TODO: use mapping
-		er := EventResponse{
-			ID:       event.ID,
-			Title:    event.Title,
-			Time:     event.Time,
-			Duration: event.Duration,
-			UserID:   event.UserID,
-		}
-		response = append(response, er)
-	}
-	body, err := json.Marshal(response)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		app.logger.Errorf("can't marshal evens: %+v", err)
-		return
-	}
-	w.Header().Set(headers.ContentType, "application/json")
-	// w.WriteHeader(http.StatusOK)
-	_, err = w.Write(body)
-	if err != nil {
-		app.logger.Errorf("can't write response body: %+v", err)
 	}
 }
 
@@ -207,15 +170,6 @@ func (app *App) deleteEvent(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func contains(s []string, str string) bool {
-	for _, v := range s {
-		if v == str {
-			return true
-		}
-	}
-	return false
-}
-
 func (app *App) getURLEventID(w http.ResponseWriter, r *http.Request) *uuid.UUID {
 	idURLPart := strings.ReplaceAll(r.RequestURI, URLPattern, "")
 	var eventID uuid.UUID
@@ -254,4 +208,40 @@ func (app *App) getEventRequest(w http.ResponseWriter, r *http.Request) *EventRe
 		return nil
 	}
 	return request
+}
+
+func writeEvens(evens []*storage.Event, app *App, w http.ResponseWriter) {
+	response := make([]EventResponse, 0, len(evens))
+	for _, event := range evens {
+		// TODO: use mapping
+		er := EventResponse{
+			ID:       event.ID,
+			Title:    event.Title,
+			Time:     event.Time,
+			Duration: event.Duration,
+			UserID:   event.UserID,
+		}
+		response = append(response, er)
+	}
+	body, err := json.Marshal(response)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		app.logger.Errorf("can't marshal evens: %+v", err)
+		return
+	}
+	w.Header().Set(headers.ContentType, "application/json")
+	// w.WriteHeader(http.StatusOK)
+	_, err = w.Write(body)
+	if err != nil {
+		app.logger.Errorf("can't write response body: %+v", err)
+	}
+}
+
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+	return false
 }

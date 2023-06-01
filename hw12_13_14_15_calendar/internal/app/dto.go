@@ -10,7 +10,7 @@ type EventRequest struct {
 	Title    string    `json:"title" validate:"required"`
 	Time     time.Time `json:"time" validate:"required"`
 	Duration int64     `json:"duration" validate:"required"`
-	UserID   uuid.UUID `json:"userId" validate:"required,uuid4"`
+	UserID   uuid.UUID `json:"userId" validate:"required"`
 }
 
 type EventResponse struct {
