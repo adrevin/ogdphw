@@ -29,7 +29,7 @@ func TestServer(t *testing.T) {
 	t.Run("basic", func(t *testing.T) {
 		storage := memorystorage.New()
 		calendar := app.New(logger, storage)
-		server := NewServer(logger, *calendar, configuration.ServerConfiguration{})
+		server := NewServer(logger, calendar, configuration.ServerConfiguration{})
 
 		testServer := httptest.NewServer(http.HandlerFunc(server.handleCalendarRequest))
 		defer testServer.Close()
@@ -48,7 +48,7 @@ func TestServer(t *testing.T) {
 	t.Run("complex", func(t *testing.T) {
 		storage := memorystorage.New()
 		calendar := app.New(logger, storage)
-		server := NewServer(logger, *calendar, configuration.ServerConfiguration{})
+		server := NewServer(logger, calendar, configuration.ServerConfiguration{})
 
 		testServer := httptest.NewServer(http.HandlerFunc(server.handleCalendarRequest))
 		defer testServer.Close()

@@ -15,8 +15,8 @@ type App struct {
 	storage storage.Storage
 }
 
-func New(logger logger.Logger, storage storage.Storage) *App {
-	app := &App{logger: logger, storage: storage}
+func New(logger logger.Logger, storage storage.Storage) App {
+	app := App{logger: logger, storage: storage}
 	logger.Info("calendar application created")
 	return app
 }
