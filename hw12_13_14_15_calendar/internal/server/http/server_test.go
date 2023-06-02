@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/app"
+	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/configuration"
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/logger"
 	memorystorage "github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/storage/memory"
 	"github.com/google/uuid"
@@ -28,11 +29,12 @@ func TestServer(t *testing.T) {
 	t.Run("basic", func(t *testing.T) {
 		storage := memorystorage.New()
 		calendar := app.New(logger, storage)
+		server := NewServer(logger, *calendar, configuration.ServerConfiguration{})
 
-		server := httptest.NewServer(http.HandlerFunc(calendar.HandleCalendarRequest))
-		defer server.Close()
+		testServer := httptest.NewServer(http.HandlerFunc(server.handleCalendarRequest))
+		defer testServer.Close()
 
-		response, err := http.Get(server.URL + "/api/events/day/2020-01-01") //nolint:noctx
+		response, err := http.Get(testServer.URL + "/api/events/day/2020-01-01") //nolint:noctx
 		require.NoError(t, err)
 		defer response.Body.Close()
 		require.Equal(t, http.StatusOK, response.StatusCode)
@@ -46,14 +48,15 @@ func TestServer(t *testing.T) {
 	t.Run("complex", func(t *testing.T) {
 		storage := memorystorage.New()
 		calendar := app.New(logger, storage)
+		server := NewServer(logger, *calendar, configuration.ServerConfiguration{})
 
-		server := httptest.NewServer(http.HandlerFunc(calendar.HandleCalendarRequest))
-		defer server.Close()
+		testServer := httptest.NewServer(http.HandlerFunc(server.handleCalendarRequest))
+		defer testServer.Close()
 		userID, err := uuid.NewUUID()
 		require.NoError(t, err)
 
 		// create
-		eventRequest := app.EventRequest{
+		eventRequest := EventRequest{
 			Title:    "Title",
 			Time:     time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC),
 			Duration: 3600,
@@ -62,7 +65,7 @@ func TestServer(t *testing.T) {
 		request, err := json.Marshal(eventRequest)
 		require.NoError(t, err)
 
-		response, err := http.Post(server.URL+"/api/events", ContentType, bytes.NewReader(request)) //nolint:noctx
+		response, err := http.Post(testServer.URL+"/api/events", ContentType, bytes.NewReader(request)) //nolint:noctx
 		require.NoError(t, err)
 		defer response.Body.Close()
 		require.Equal(t, http.StatusOK, response.StatusCode)
@@ -70,20 +73,20 @@ func TestServer(t *testing.T) {
 
 		out, err := io.ReadAll(response.Body)
 
-		eID := &app.EventID{}
+		eID := &EventID{}
 		json.Unmarshal(out, eID)
 		require.NoError(t, err)
 		require.NotEqual(t, uuid.Nil, eID.ID)
 
 		response, err = http.Get( //nolint:noctx
-			server.URL + "/api/events/day/" + eventRequest.Time.Format(time.DateOnly))
+			testServer.URL + "/api/events/day/" + eventRequest.Time.Format(time.DateOnly))
 		require.NoError(t, err)
 		require.Equal(t, http.StatusOK, response.StatusCode)
 		require.Equal(t, ContentType, response.Header.Get("Content-Type"))
 
 		out, err = io.ReadAll(response.Body)
 		response.Body.Close()
-		events := make([]app.EventResponse, 0)
+		events := make([]EventResponse, 0)
 		json.Unmarshal(out, &events)
 		require.NoError(t, err)
 
@@ -93,7 +96,7 @@ func TestServer(t *testing.T) {
 		require.Equal(t, time.Duration(eventRequest.Duration), events[0].Duration)
 
 		// update
-		updateRequest := app.EventRequest{
+		updateRequest := EventRequest{
 			Title:    "NewTitle",
 			Time:     time.Date(7019, time.December, 1, 0, 0, 0, 0, time.UTC),
 			Duration: 3300,
@@ -104,7 +107,7 @@ func TestServer(t *testing.T) {
 		require.NoError(t, err)
 
 		req, err := http.NewRequest( //nolint:noctx
-			http.MethodPut, server.URL+"/api/events/"+eID.ID.String(), bytes.NewReader(request))
+			http.MethodPut, testServer.URL+"/api/events/"+eID.ID.String(), bytes.NewReader(request))
 		require.NoError(t, err)
 		req.Header.Set("Content-Type", ContentType)
 		client := &http.Client{}
@@ -113,14 +116,16 @@ func TestServer(t *testing.T) {
 		require.Equal(t, http.StatusOK, response.StatusCode)
 		response.Body.Close()
 
-		response, err = http.Get(server.URL + "/api/events/day/" + updateRequest.Time.Format(time.DateOnly)) //nolint:noctx
+		response, err = http.Get( //nolint:noctx
+			testServer.URL + "/api/events/day/" + updateRequest.Time.Format(time.DateOnly))
+
 		require.NoError(t, err)
 		require.Equal(t, http.StatusOK, response.StatusCode)
 		require.Equal(t, ContentType, response.Header.Get("Content-Type"))
 
 		out, err = io.ReadAll(response.Body)
 		response.Body.Close()
-		events = make([]app.EventResponse, 0)
+		events = make([]EventResponse, 0)
 		json.Unmarshal(out, &events)
 		require.NoError(t, err)
 
@@ -131,7 +136,7 @@ func TestServer(t *testing.T) {
 
 		// delete
 		req, err = http.NewRequest( //nolint:noctx
-			http.MethodDelete, server.URL+"/api/events/"+eID.ID.String(), bytes.NewReader(request))
+			http.MethodDelete, testServer.URL+"/api/events/"+eID.ID.String(), bytes.NewReader(request))
 		require.NoError(t, err)
 		req.Header.Set("Content-Type", ContentType)
 		client = &http.Client{}
@@ -140,14 +145,15 @@ func TestServer(t *testing.T) {
 		require.Equal(t, http.StatusOK, response.StatusCode)
 		response.Body.Close()
 
-		response, err = http.Get(server.URL + "/api/events/day/" + updateRequest.Time.Format(time.DateOnly)) //nolint:noctx
+		response, err = http.Get( //nolint:noctx
+			testServer.URL + "/api/events/day/" + updateRequest.Time.Format(time.DateOnly))
 		require.NoError(t, err)
 		require.Equal(t, http.StatusOK, response.StatusCode)
 		require.Equal(t, ContentType, response.Header.Get("Content-Type"))
 
 		out, err = io.ReadAll(response.Body)
 		response.Body.Close()
-		events = make([]app.EventResponse, 0)
+		events = make([]EventResponse, 0)
 		json.Unmarshal(out, &events)
 		require.NoError(t, err)
 		require.Equal(t, 0, len(events))

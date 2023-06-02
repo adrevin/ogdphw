@@ -9,6 +9,7 @@ import (
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/app"
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/configuration"
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/logger"
+	"github.com/go-playground/validator/v10"
 )
 
 type Server struct {
@@ -16,10 +17,12 @@ type Server struct {
 	config     configuration.ServerConfiguration
 	httpServer *http.Server
 	app        app.App
+	validate   *validator.Validate
 }
 
 func NewServer(l logger.Logger, app app.App, cfg configuration.ServerConfiguration) *Server {
-	return &Server{logger: l, config: cfg, app: app}
+	v := validator.New()
+	return &Server{logger: l, config: cfg, app: app, validate: v}
 }
 
 func (s *Server) Start(ctx context.Context) error {
@@ -62,9 +65,9 @@ func (s *Server) Stop(ctx context.Context) error {
 
 func (s *Server) getServeMux(logg logger.Logger) *http.ServeMux {
 	serveMux := http.NewServeMux()
-	serveMux.Handle("/", logRequest(http.HandlerFunc(NotImplemented), logg))
-	serveMux.Handle("/error", logRequest(http.HandlerFunc(Error), logg))
-	serveMux.Handle("/hello", logRequest(http.HandlerFunc(Hello), logg))
-	serveMux.Handle(app.URLPattern, logRequest(http.HandlerFunc(s.app.HandleCalendarRequest), logg))
+	serveMux.Handle("/", logRequest(http.HandlerFunc(notImplemented), logg))
+	serveMux.Handle("/error", logRequest(http.HandlerFunc(serverError), logg))
+	serveMux.Handle("/hello", logRequest(http.HandlerFunc(hello), logg))
+	serveMux.Handle(app.URLPattern, logRequest(http.HandlerFunc(s.handleCalendarRequest), logg))
 	return serveMux
 }
