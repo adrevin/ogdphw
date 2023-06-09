@@ -2,6 +2,7 @@ package internalhttp
 
 import (
 	"context"
+	"errors"
 	"net"
 	"net/http"
 	"strconv"
@@ -38,16 +39,16 @@ func (s *Server) Start(ctx context.Context) error {
 
 	go func() {
 		if err := s.httpServer.ListenAndServe(); err != nil {
-			if err == http.ErrServerClosed {
+			if errors.Is(err, http.ErrServerClosed) {
 				// normal interrupt operation, ignored
-				s.logger.Debug("server stopped")
+				s.logger.Debug("http server stopped")
 				return
 			}
 			s.logger.Fatalf("can not start http server: %+v", err)
 		}
 	}()
 
-	s.logger.Debugf("server started and listen http://%s", address)
+	s.logger.Debugf("http server started and listen %s", address)
 
 	<-ctx.Done()
 
@@ -55,7 +56,7 @@ func (s *Server) Start(ctx context.Context) error {
 }
 
 func (s *Server) Stop(ctx context.Context) error {
-	s.logger.Debug("server is shutting down...")
+	s.logger.Debug("http server is shutting down...")
 	err := s.httpServer.Shutdown(ctx)
 	if err != nil {
 		return err

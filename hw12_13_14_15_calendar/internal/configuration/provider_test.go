@@ -42,8 +42,8 @@ storage:
 		require.Equal(t, zap.NewAtomicLevelAt(zap.DebugLevel), config.Logger.Level)
 		require.Equal(t, "T", config.Logger.EncoderConfig.TimeKey)
 		require.Equal(t, false, config.Storage.UsePostgresStorage)
-		require.Equal(t, 5000, config.Server.Port)
-		require.Equal(t, 6*time.Second, config.Server.ShutdownTimeout)
+		require.Equal(t, 5000, config.HTTPServer.Port)
+		require.Equal(t, 6*time.Second, config.ShutdownTimeout)
 
 		err = os.Remove(tmp.Name())
 		require.NoErrorf(t, err, "can not delete temporary file")

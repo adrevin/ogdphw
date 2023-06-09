@@ -1,7 +1,53 @@
 syntax = "proto3";
-
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
 package event;
+option go_package = "./;internalgrpc";
 
-message Event {
-    // TODO
+service Evens {
+  rpc CreateEvent (NewEventRequest) returns (EventIdResponse) {}
+  rpc UpdateEvent (ChangeEventRequest) returns (google.protobuf.Empty) {}
+  rpc DeleteEvent (EventIdRequest) returns (google.protobuf.Empty) {}
+  rpc DayEvens (TimeRequest) returns (EventsResponse) {}
+  rpc WeekEvens (TimeRequest) returns (EventsResponse) {}
+  rpc MonthEvens (TimeRequest) returns (EventsResponse) {}
+}
+
+message NewEventRequest {
+  string title = 1;
+  google.protobuf.Timestamp time =2;
+  int64 duration = 3;
+  bytes user_id = 4;
+}
+
+message ChangeEventRequest {
+  bytes id = 1;
+  string title = 2;
+  google.protobuf.Timestamp time = 3;
+  int64 duration = 4;
+  bytes user_id = 5;
+}
+
+message EventResponse {
+  bytes id = 1;
+  string title = 2;
+  google.protobuf.Timestamp time = 3;
+  int64 duration = 4;
+  bytes user_id = 5;
+}
+
+message EventsResponse {
+  repeated EventResponse Events = 1;
+}
+
+message EventIdResponse {
+  bytes id = 1;
+}
+
+message EventIdRequest {
+  bytes id = 1;
+}
+
+message TimeRequest {
+  google.protobuf.Timestamp time = 3;
 }
