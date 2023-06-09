@@ -24,16 +24,16 @@ logger:
     callerKey:      "C"
     messageKey:     "M"
     stacktraceKey:  "S"
-server:
+httpServer:
   host: "0.0.0.0"
   port: 5000
-  shutdownTimeout: 6s
   readTimeout: 15s
   writeTimeout: 60s
   idleTimeout: 5s
 storage:
   usePostgres: false
   postgresConnection: ""
+shutdownTimeout: 6s
 `)
 		require.NoErrorf(t, err, "can not write temporary file")
 
