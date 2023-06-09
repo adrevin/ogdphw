@@ -27,12 +27,12 @@ type Server struct {
 	config     configuration.GrpcConfiguration
 }
 
-func NewServer(l logger.Logger, app app.App, cfg configuration.GrpcConfiguration) *Server {
-	server := &Server{logger: l, app: app, config: cfg}
+func NewServer(logger logger.Logger, app app.App, configuration configuration.GrpcConfiguration) *Server {
+	server := &Server{logger: logger, app: app, config: configuration}
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(server.unaryInterceptor),
-		grpc.KeepaliveEnforcementPolicy(cfg.EnforcementPolicy),
-		grpc.KeepaliveParams(cfg.ServerParameters))
+		grpc.KeepaliveEnforcementPolicy(configuration.EnforcementPolicy),
+		grpc.KeepaliveParams(configuration.ServerParameters))
 	server.grpcServer = grpcServer
 	RegisterEvensServer(server.grpcServer, server)
 	return server
@@ -193,7 +193,12 @@ func (s Server) mapEvents(events []*storage.Event) (*EventsResponse, error) {
 	return response, nil
 }
 
-func (s Server) unaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+func (s Server) unaryInterceptor(
+	ctx context.Context,
+	req interface{},
+	info *grpc.UnaryServerInfo,
+	handler grpc.UnaryHandler,
+) (interface{}, error) {
 	start := time.Now()
 	m, err := handler(ctx, req)
 	if err != nil {
