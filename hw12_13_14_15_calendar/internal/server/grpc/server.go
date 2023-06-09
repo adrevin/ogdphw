@@ -28,11 +28,12 @@ type Server struct {
 }
 
 func NewServer(l logger.Logger, app app.App, cfg configuration.GrpcConfiguration) *Server {
+	server := &Server{logger: l, app: app, config: cfg}
 	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(server.unaryInterceptor),
 		grpc.KeepaliveEnforcementPolicy(cfg.EnforcementPolicy),
 		grpc.KeepaliveParams(cfg.ServerParameters))
-
-	server := &Server{logger: l, app: app, grpcServer: grpcServer, config: cfg}
+	server.grpcServer = grpcServer
 	RegisterEvensServer(server.grpcServer, server)
 	return server
 }
@@ -130,7 +131,7 @@ func (s Server) DeleteEvent(_ context.Context, request *EventIdRequest) (*empty.
 	return &empty.Empty{}, nil
 }
 
-func (s Server) DayEvents(_ context.Context, request *TimeRequest) (*EventsResponse, error) {
+func (s Server) DayEvens(_ context.Context, request *TimeRequest) (*EventsResponse, error) {
 	appEvents, err := s.app.DayEvens(request.Time.AsTime())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, err.Error())
@@ -190,4 +191,15 @@ func (s Server) mapEvents(events []*storage.Event) (*EventsResponse, error) {
 		response.Events = append(response.Events, e)
 	}
 	return response, nil
+}
+
+func (s Server) unaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	start := time.Now()
+	m, err := handler(ctx, req)
+	if err != nil {
+		s.logger.Errorf("RPC '%s' failed with error: %+v", info.FullMethod, err)
+		return m, err
+	}
+	s.logger.Debugf("RPC '%s', %s", info.FullMethod, time.Since(start))
+	return m, err
 }
