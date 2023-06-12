@@ -1,3 +1,5 @@
+//go:generate protoc EventService.proto --proto_path=./../../../api --go_out=.  --go-grpc_out=.
+
 package internalgrpc
 
 import (
