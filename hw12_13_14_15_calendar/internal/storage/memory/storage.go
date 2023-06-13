@@ -113,6 +113,14 @@ func (l memStorage) MonthEvens(time time.Time) ([]*storage.Event, error) {
 	return eventsToResult(l.months[monthKey]), nil
 }
 
+func (memStorage) GetEvensToNotify(_ int) ([]*storage.EventNotification, error) {
+	return nil, storage.ErrNotImplemented
+}
+
+func (memStorage) Clean(_ time.Duration) error {
+	return storage.ErrNotImplemented
+}
+
 func eventsToResult(events map[uuid.UUID]*storage.Event) []*storage.Event {
 	if events == nil {
 		return make([]*storage.Event, 0)

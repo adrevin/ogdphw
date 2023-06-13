@@ -8,11 +8,12 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
-	"time"
 
-	backgroundTask "github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/backgroundtask"
+	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/backgroundtask"
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/configuration"
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/logger"
+	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/scheduler"
+	sqlstorage "github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/storage/sql"
 )
 
 var configFile string
@@ -32,6 +33,15 @@ func main() {
 
 	logger := logger.New(config.Logger)
 	defer logger.Sync()
+
+	if !config.Storage.UsePostgresStorage {
+		fmt.Println("memory storage not implements required methods")
+		os.Exit(1) //nolint:gocritic
+	}
+
+	storageStorage := sqlstorage.New(config.Storage, logger)
+	scheduler := scheduler.New(logger, storageStorage)
+
 	logger.Infof(
 		"Scheduler started. Scan delay: %s, clean delay: %s",
 		config.Scheduler.ScanDelay,
@@ -45,22 +55,27 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		backgroundTask.New(ctx, "Clean", config.Scheduler.CleanDelay, func() {
-			logger.Debug("cleaning ...")
-			time.Sleep(3 * time.Second)
-			logger.Debug("cleaned")
+		backgroundtask.New(ctx, "Clean", config.Scheduler.CleanDelay, func() {
+			err := scheduler.Clean()
+			if err != nil {
+				logger.Debugf("cleaning error: %=v", err)
+				return
+			}
 		}, logger).Start()
 	}()
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		backgroundTask.New(ctx, "Scan", config.Scheduler.ScanDelay, func() {
-			logger.Debug("scanning ...")
-			time.Sleep(3 * time.Second)
-			logger.Debug("scanned")
+		backgroundtask.New(ctx, "Scan", config.Scheduler.ScanDelay, func() {
+			err := scheduler.Scan()
+			if err != nil {
+				logger.Debugf("cleaning error: %=v", err)
+				return
+			}
 		}, logger).Start()
 	}()
 
 	wg.Wait()
+	logger.Info("Scheduler stopped")
 }

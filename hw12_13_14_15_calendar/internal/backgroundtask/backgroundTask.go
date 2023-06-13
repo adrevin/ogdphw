@@ -32,7 +32,7 @@ func (t *BackgroundTask) Start() {
 	for {
 		select {
 		case <-t.context.Done():
-			t.logger.Infof("background process '%s' stopped", t.name)
+			t.logger.Infof("process '%s' stopped", t.name)
 			return
 		case <-time.After(t.delay):
 			t.worker()

@@ -153,6 +153,37 @@ func (s *sqlStorage) MonthEvens(t time.Time) ([]*storage.Event, error) {
 	return events, nil
 }
 
+func (s *sqlStorage) GetEvensToNotify(limit int) ([]*storage.EventNotification, error) {
+	query := `select id, title, time, duration, user_id from events where notified_at is null limit $1`
+
+	rows, err := s.db.Query(query, limit)
+	if err != nil {
+		s.logger.Errorf("can not get events: %+v", err)
+		return nil, err
+	}
+
+	notifications := make([]*storage.EventNotification, 0)
+	for rows.Next() {
+		event := &storage.EventNotification{}
+		err := rows.Scan(&event.ID, &event.Title, &event.Time, &event.UserID)
+		if err != nil {
+			return nil, err
+		}
+		notifications = append(notifications, event)
+	}
+
+	if err != nil {
+		s.logger.Errorf("can not get events: %+v", err)
+		return nil, err
+	}
+
+	return notifications, nil
+}
+
+func (s *sqlStorage) Clean(_ time.Duration) error {
+	return nil
+}
+
 func getEvents(rows *sql.Rows) ([]*storage.Event, error) {
 	events := make([]*storage.Event, 0)
 	for rows.Next() {

@@ -37,8 +37,9 @@ type GrpcConfiguration struct {
 }
 
 type SchedulerConfiguration struct {
-	ScanDelay  time.Duration `yaml:"scanDelay"`
-	CleanDelay time.Duration `yaml:"cleanDelay"`
+	ScanDelay      time.Duration `yaml:"scanDelay"`
+	CleanDelay     time.Duration `yaml:"cleanDelay"`
+	CleanOlderThan time.Duration `yaml:"cleanOlderThan"`
 }
 
 func NewConfig(configFile string) (Config, error) {

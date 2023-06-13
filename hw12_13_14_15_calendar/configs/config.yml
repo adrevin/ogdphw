@@ -34,4 +34,5 @@ storage:
 scheduler:
   scanDelay: 30s
   cleanDelay: 1h
+  cleanOlderThan: 1y
 shutdownTimeout: 6s
