@@ -121,8 +121,8 @@ func TestStorage(t *testing.T) {
 
 		we, _ := memStorage.WeekEvens(time.Date(1970, time.January, 5, 10, 0, 0, 0, time.UTC))
 		require.Equal(t, 2, len(we))
-		sort.Slice(me, func(i, j int) bool {
-			return me[i].Time.Day() < (me[j].Time.Day())
+		sort.Slice(we, func(i, j int) bool {
+			return we[i].Time.Day() < (we[j].Time.Day())
 		})
 		weekDays := []int{6, 7}
 		for i, e := range we {
