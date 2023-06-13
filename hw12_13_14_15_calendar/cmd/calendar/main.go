@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/app"
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/configuration"
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/logger"
+	internalgrpc "github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/server/grpc"
 	internalhttp "github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/server/http"
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/storage"
 	memorystorage "github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/storage/memory"
@@ -56,28 +58,46 @@ func main() {
 
 	calendar := app.New(logg, storageStorage)
 
-	server := internalhttp.NewServer(logg, calendar, config.Server)
+	httpServer := internalhttp.NewServer(logg, calendar, config.HTTPServer)
+	grpcServer := internalgrpc.NewServer(logg, calendar, config.GrpcServer)
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	defer cancel()
 
 	go func() {
 		<-ctx.Done()
-
-		ctx, cancel := context.WithTimeout(context.Background(), config.Server.ShutdownTimeout)
+		ctx, cancel := context.WithTimeout(context.Background(), config.ShutdownTimeout)
 		defer cancel()
+		go func() {
+			if err := httpServer.Stop(ctx); err != nil {
+				logg.Errorf("failed to stop http server: %+v", err)
+			}
+		}()
+		go func() {
+			grpcServer.Stop()
+		}()
+	}()
 
-		if err := server.Stop(ctx); err != nil {
-			logg.Errorf("failed to stop http server: %+v", err)
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		if err := httpServer.Start(ctx); err != nil {
+			logg.Error("failed to start http server: " + err.Error())
+			cancel()
+			os.Exit(1)
 		}
 	}()
 
-	logg.Info("calendar is running...")
+	go func() {
+		defer wg.Done()
+		if err := grpcServer.Start(ctx); err != nil {
+			logg.Error("failed to start grpc server: " + err.Error())
+			cancel()
+			os.Exit(1)
+		}
+	}()
 
-	if err := server.Start(ctx); err != nil {
-		logg.Error("failed to start http server: " + err.Error())
-		cancel()
-		os.Exit(1) //nolint:gocritic
-	}
-	logg.Info("calendar is stopped")
+	logg.Info("calendar is running")
+	wg.Wait()
 }

@@ -10,13 +10,25 @@ logger:
     callerKey:      "C"
     messageKey:     "M"
     stacktraceKey:  ""
-server:
+httpServer:
   host: "0.0.0.0"
   port: 5000
-  shutdownTimeout: 6s
   readTimeout: 15s
   writeTimeout: 60s
   idleTimeout: 5s
+grpcServer:
+  host: "0.0.0.0"
+  port: 5001
+  enforcementPolicy:
+    minTime: 5s
+    permitWithoutStream: true
+  serverParameters:
+    maxConnectionIdle: 15s
+    maxConnectionAge: 30s
+    maxConnectionAgeGrace: 5s
+    time: 5s
+    timeout: 1s
 storage:
   usePostgres: true
   postgresConnection: "postgres://hw12:hw12@localhost/hw12?sslmode=disable"
+shutdownTimeout: 6s

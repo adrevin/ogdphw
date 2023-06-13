@@ -47,11 +47,13 @@ func (l memStorage) Update(id uuid.UUID, event *storage.Event) error {
 	if l.events[id] == nil {
 		return storage.ErrEventNotFound
 	}
-	l.Delete(event.ID)
+	l.Delete(id)
+
 	event.ID = id
 	setKeys(event)
 	l.makeMaps(event)
 	l.save(event)
+
 	return nil
 }
 
@@ -65,9 +67,21 @@ func (l memStorage) Delete(id uuid.UUID) error {
 	}
 
 	delete(l.events, event.ID)
-	delete(l.weeks[event.WeekKey], event.ID)
+
 	delete(l.days[event.DayKey], event.ID)
+	if len(l.days[event.DayKey]) == 0 {
+		delete(l.days, event.DayKey)
+	}
+
+	delete(l.weeks[event.WeekKey], event.ID)
+	if len(l.weeks[event.WeekKey]) == 0 {
+		delete(l.weeks, event.WeekKey)
+	}
+
 	delete(l.months[event.MonthKey], event.ID)
+	if len(l.months[event.MonthKey]) == 0 {
+		delete(l.months, event.MonthKey)
+	}
 
 	return nil
 }

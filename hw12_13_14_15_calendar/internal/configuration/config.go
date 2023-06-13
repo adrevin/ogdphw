@@ -4,26 +4,35 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+	"google.golang.org/grpc/keepalive"
 )
 
 type Config struct {
-	Logger  zap.Config           `yaml:"logger"`
-	Server  ServerConfiguration  `yaml:"server"`
-	Storage StorageConfiguration `yaml:"storage"`
+	Logger          zap.Config           `yaml:"logger"`
+	HTTPServer      ServerConfiguration  `yaml:"httpServer"`
+	Storage         StorageConfiguration `yaml:"storage"`
+	GrpcServer      GrpcConfiguration    `yaml:"grpcServer"`
+	ShutdownTimeout time.Duration        `yaml:"shutdownTimeout"`
 }
 
 type ServerConfiguration struct {
-	Host            string        `yaml:"host"`
-	Port            int           `yaml:"port"`
-	ShutdownTimeout time.Duration `yaml:"shutdownTimeout"`
-	IdleTimeout     time.Duration `yaml:"idleTimeout"`
-	WriteTimeout    time.Duration `yaml:"writeTimeout"`
-	ReadTimeout     time.Duration `yaml:"readTimeout"`
+	Host         string        `yaml:"host"`
+	Port         int           `yaml:"port"`
+	IdleTimeout  time.Duration `yaml:"idleTimeout"`
+	WriteTimeout time.Duration `yaml:"writeTimeout"`
+	ReadTimeout  time.Duration `yaml:"readTimeout"`
 }
 
 type StorageConfiguration struct {
 	UsePostgresStorage bool   `yaml:"usePostgres"`
 	PostgresConnection string `yaml:"postgresConnection"`
+}
+
+type GrpcConfiguration struct {
+	Host              string                      `yaml:"host"`
+	Port              int                         `yaml:"port"`
+	EnforcementPolicy keepalive.EnforcementPolicy `yaml:"enforcementPolicy"`
+	ServerParameters  keepalive.ServerParameters  `yaml:"serverParameters"`
 }
 
 func NewConfig(configFile string) (Config, error) {
