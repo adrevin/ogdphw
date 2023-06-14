@@ -40,7 +40,7 @@ func main() {
 	}
 
 	storageStorage := sqlstorage.New(config.Storage, logger)
-	scheduler := scheduler.New(logger, storageStorage)
+	scheduler := scheduler.New(logger, storageStorage, config.Scheduler)
 
 	logger.Infof(
 		"Scheduler started. Scan delay: %s, clean delay: %s",

@@ -14,5 +14,5 @@ type Storage interface {
 	WeekEvens(time time.Time) ([]*Event, error)
 	MonthEvens(time time.Time) ([]*Event, error)
 	GetEvensToNotify(limit int) ([]*EventNotification, error)
-	Clean(olderThan time.Duration) error
+	Clean(olderThan time.Duration) (int64, error)
 }

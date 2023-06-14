@@ -180,8 +180,17 @@ func (s *sqlStorage) GetEvensToNotify(limit int) ([]*storage.EventNotification, 
 	return notifications, nil
 }
 
-func (s *sqlStorage) Clean(_ time.Duration) error {
-	return nil
+func (s *sqlStorage) Clean(duration time.Duration) (int64, error) {
+	max := time.Now().Add(-duration)
+	r, err := s.db.Exec("delete from events where time < $1", max)
+	if err != nil {
+		return 0, err
+	}
+	affected, err := r.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+	return affected, nil
 }
 
 func getEvents(rows *sql.Rows) ([]*storage.Event, error) {

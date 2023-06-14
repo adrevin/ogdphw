@@ -33,6 +33,6 @@ storage:
   postgresConnection: "postgres://hw12:hw12@localhost/hw12?sslmode=disable"
 scheduler:
   scanDelay: 30s
-  cleanDelay: 1h
-  cleanOlderThan: 1y
+  cleanDelay: 5s
+  cleanOlderThan: 24h
 shutdownTimeout: 6s

@@ -117,8 +117,8 @@ func (memStorage) GetEvensToNotify(_ int) ([]*storage.EventNotification, error) 
 	return nil, storage.ErrNotImplemented
 }
 
-func (memStorage) Clean(_ time.Duration) error {
-	return storage.ErrNotImplemented
+func (memStorage) Clean(_ time.Duration) (int64, error) {
+	return 0, storage.ErrNotImplemented
 }
 
 func eventsToResult(events map[uuid.UUID]*storage.Event) []*storage.Event {
