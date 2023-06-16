@@ -42,10 +42,10 @@ func main() {
 
 	storageStorage := sqlstorage.New(config.Storage, logger)
 
-	mq := rabbitmq.New(config.MessageQueue, logger)
-	defer mq.Close()
+	rmq := rabbitmq.New(config.MessageQueue, logger)
+	defer rmq.Close()
 
-	scheduler := scheduler.New(logger, storageStorage, config.Scheduler, mq)
+	scheduler := scheduler.New(logger, storageStorage, config.Scheduler, rmq)
 
 	logger.Infof(
 		"Scheduler started. Scan delay: %s, clean delay: %s",

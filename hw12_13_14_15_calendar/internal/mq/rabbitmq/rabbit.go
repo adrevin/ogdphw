@@ -53,18 +53,6 @@ func (r *rabbitMQ) Close() {
 }
 
 func (r *rabbitMQ) SendEventNotification(notification *mq.Notification) error {
-	/*	ch, err := r.conn.Channel()
-		defer func(ch *amqp091.Channel) {
-			err := ch.Close()
-			if err != nil {
-				r.logger.Errorf("Failed to close a channel: %+v", err)
-			}
-		}(ch)
-
-		if err != nil {
-			r.logger.Errorf("Failed to open a channel: %+v", err)
-		}
-	*/
 	ctx, cancel := context.WithTimeout(context.Background(), r.config.PublishTimeout)
 	defer cancel()
 
@@ -85,11 +73,8 @@ func (r *rabbitMQ) SendEventNotification(notification *mq.Notification) error {
 	return nil
 }
 
-/*
-func (r *rabbitMQ) Consume(ctx context.Context, callback func(*mq.Notification) bool) error {
-	ch, err := r.conn.Channel()
-
-	delivery, err := ch.Consume(
+func (r *rabbitMQ) ConsumeNotifications(ctx context.Context, callback func(*mq.Notification) bool) error {
+	delivery, err := r.ch.Consume(
 		r.config.QueueName, // queue
 		"",
 		false,
@@ -102,39 +87,30 @@ func (r *rabbitMQ) Consume(ctx context.Context, callback func(*mq.Notification) 
 		return err
 	}
 
-	go func() {
-		defer func(ch *amqp091.Channel) {
-			err := ch.Close()
+	r.logger.Info("notifications consuming started")
+	for {
+		select {
+		case <-ctx.Done():
+			r.logger.Info("notifications consuming stopped")
+			return nil
+		case d := <-delivery:
+			var notification *mq.Notification
+			err = json.Unmarshal(d.Body, &notification)
 			if err != nil {
-				r.logger.Errorf("Failed to close a channel: %+v", err)
+				r.logger.Errorf("unmarshal error: v+%", err)
+				continue
 			}
-		}(ch)
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case d := <-delivery:
-				var notification *mq.Notification
-				err = json.Unmarshal(d.Body, &notification)
+			if callback(notification) {
+				err := r.ch.Ack(d.DeliveryTag, false)
 				if err != nil {
-					r.logger.Errorf("unmarshal error: v+%", err)
-					continue
+					r.logger.Errorf("can not ASK delivery: v+%", err)
 				}
-				if callback(notification) {
-					err := ch.Ack(d.DeliveryTag, false)
-					if err != nil {
-						r.logger.Errorf("can not ASK delivery: v+%", err)
-					}
-				} else {
-					err := ch.Nack(d.DeliveryTag, false, true)
-					if err != nil {
-						r.logger.Errorf("can not NACK delivery: v+%", err)
-					}
+			} else {
+				err := r.ch.Nack(d.DeliveryTag, false, true)
+				if err != nil {
+					r.logger.Errorf("can not NACK delivery: v+%", err)
 				}
 			}
 		}
-	}()
-
-	return nil
+	}
 }
-*/
