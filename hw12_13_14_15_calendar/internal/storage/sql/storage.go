@@ -153,8 +153,8 @@ func (s *sqlStorage) MonthEvens(t time.Time) ([]*storage.Event, error) {
 	return events, nil
 }
 
-func (s *sqlStorage) GetEvensToNotify(limit int) ([]*storage.EventNotification, error) {
-	query := `select id, title, time, duration, user_id from events where notified_at is null limit $1`
+func (s *sqlStorage) GetEvensToNotify(limit int) ([]*storage.Event, error) {
+	query := `select id, title, time, user_id from events where notified_at is null limit $1`
 
 	rows, err := s.db.Query(query, limit)
 	if err != nil {
@@ -162,14 +162,14 @@ func (s *sqlStorage) GetEvensToNotify(limit int) ([]*storage.EventNotification, 
 		return nil, err
 	}
 
-	notifications := make([]*storage.EventNotification, 0)
+	events := make([]*storage.Event, 0)
 	for rows.Next() {
-		event := &storage.EventNotification{}
+		event := &storage.Event{}
 		err := rows.Scan(&event.ID, &event.Title, &event.Time, &event.UserID)
 		if err != nil {
 			return nil, err
 		}
-		notifications = append(notifications, event)
+		events = append(events, event)
 	}
 
 	if err != nil {
@@ -177,7 +177,25 @@ func (s *sqlStorage) GetEvensToNotify(limit int) ([]*storage.EventNotification, 
 		return nil, err
 	}
 
-	return notifications, nil
+	return events, nil
+}
+
+func (s *sqlStorage) SetEvenIsNotified(eventID uuid.UUID) error {
+	exec, err := s.db.Exec("update events set notified_at=$1 where id=$2", time.Now(), eventID)
+	if err != nil {
+		s.logger.Errorf("can not update event: %+v", err)
+		return err
+	}
+	result, err := exec.RowsAffected()
+	if err != nil {
+		s.logger.Errorf("can not get rows affected : %+v", err)
+		return err
+	}
+	if result == 0 {
+		s.logger.Errorf("can not update row. row not found", err)
+		return storage.ErrEventNotFound
+	}
+	return nil
 }
 
 func (s *sqlStorage) Clean(duration time.Duration) (int64, error) {

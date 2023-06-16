@@ -32,7 +32,12 @@ storage:
   usePostgres: true
   postgresConnection: "postgres://hw12:hw12@localhost/hw12?sslmode=disable"
 scheduler:
-  scanDelay: 30s
-  cleanDelay: 5s
+  scanDelay: 1s
+  cleanDelay: 60m
   cleanOlderThan: 24h
+messageQueue:
+  brokerUri: amqp://hw14:hw14@127.0.0.1:5672/hw14
+  queueName: EVENT_NOTIFICATION
+  publishTimeout: 1s
+
 shutdownTimeout: 6s

@@ -16,10 +16,3 @@ type Event struct {
 	WeekKey  time.Time
 	MonthKey time.Time
 }
-
-type EventNotification struct {
-	ID     uuid.UUID
-	Title  string
-	Time   time.Time
-	UserID uuid.UUID
-}

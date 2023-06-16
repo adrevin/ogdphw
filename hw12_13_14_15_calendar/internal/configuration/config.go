@@ -8,12 +8,13 @@ import (
 )
 
 type Config struct {
-	Logger          zap.Config             `yaml:"logger"`
-	HTTPServer      ServerConfiguration    `yaml:"httpServer"`
-	Storage         StorageConfiguration   `yaml:"storage"`
-	GrpcServer      GrpcConfiguration      `yaml:"grpcServer"`
-	Scheduler       SchedulerConfiguration `yaml:"scheduler"`
-	ShutdownTimeout time.Duration          `yaml:"shutdownTimeout"`
+	Logger          zap.Config                `yaml:"logger"`
+	HTTPServer      ServerConfiguration       `yaml:"httpServer"`
+	Storage         StorageConfiguration      `yaml:"storage"`
+	GrpcServer      GrpcConfiguration         `yaml:"grpcServer"`
+	Scheduler       SchedulerConfiguration    `yaml:"scheduler"`
+	MessageQueue    MessageQueueConfiguration `yaml:"messageQueue"`
+	ShutdownTimeout time.Duration             `yaml:"shutdownTimeout"`
 }
 
 type ServerConfiguration struct {
@@ -40,6 +41,12 @@ type SchedulerConfiguration struct {
 	ScanDelay      time.Duration `yaml:"scanDelay"`
 	CleanDelay     time.Duration `yaml:"cleanDelay"`
 	CleanOlderThan time.Duration `yaml:"cleanOlderThan"`
+}
+
+type MessageQueueConfiguration struct {
+	BrokerURI      string        `yaml:"brokerUri"`
+	QueueName      string        `yaml:"queueName"`
+	PublishTimeout time.Duration `yaml:"publishTimeout"`
 }
 
 func NewConfig(configFile string) (Config, error) {

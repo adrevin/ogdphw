@@ -13,6 +13,7 @@ type Storage interface {
 	DayEvens(time time.Time) ([]*Event, error)
 	WeekEvens(time time.Time) ([]*Event, error)
 	MonthEvens(time time.Time) ([]*Event, error)
-	GetEvensToNotify(limit int) ([]*EventNotification, error)
+	GetEvensToNotify(limit int) ([]*Event, error)
+	SetEvenIsNotified(uuid.UUID) error
 	Clean(olderThan time.Duration) (int64, error)
 }
