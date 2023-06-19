@@ -69,11 +69,7 @@ func (r *rabbitMQ) SendEventNotification(notification *mq.Notification) error {
 			ContentType: "application/json",
 			Body:        body,
 		})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (r *rabbitMQ) ConsumeNotifications(ctx context.Context, callback func(*mq.Notification) bool) error {
