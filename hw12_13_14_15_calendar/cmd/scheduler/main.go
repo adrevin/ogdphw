@@ -42,7 +42,11 @@ func main() {
 
 	storageStorage := sqlstorage.New(config.Storage, logger)
 
-	rmq := rabbitmq.New(config.MessageQueue, logger)
+	rmq, err := rabbitmq.New(config.MessageQueue, logger)
+	if err != nil {
+		logger.Errorf("failed to start scheduler. RMQ error")
+		os.Exit(1)
+	}
 	defer rmq.Close()
 
 	scheduler := scheduler.New(logger, storageStorage, config.Scheduler, rmq)

@@ -32,7 +32,11 @@ func main() {
 	logger := logger.New(config.Logger)
 	defer logger.Sync()
 
-	rmq := rabbitmq.New(config.MessageQueue, logger)
+	rmq, err := rabbitmq.New(config.MessageQueue, logger)
+	if err != nil {
+		logger.Errorf("failed to start sender. RMQ error")
+		os.Exit(1) //nolint:gocritic
+	}
 	defer rmq.Close()
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)

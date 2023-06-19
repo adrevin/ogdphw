@@ -17,23 +17,26 @@ type rabbitMQ struct {
 	ch     *amqp091.Channel
 }
 
-func New(config configuration.MessageQueueConfiguration, logger logger.Logger) mq.MQ {
+func New(config configuration.MessageQueueConfiguration, logger logger.Logger) (mq.MQ, error) {
 	conn, err := amqp091.Dial(config.BrokerURI)
 	if err != nil {
-		logger.Errorf("Failed to open connection: %+v", err)
+		logger.Errorf("failed to open RMQ connection: %+v", err)
+		return nil, err
 	}
 
 	ch, err := conn.Channel()
 	if err != nil {
-		logger.Errorf("Failed to get connection channel channel: %+v", err)
+		logger.Errorf("failed to get RMQ connection channel channel: %+v", err)
+		return nil, err
 	}
 
 	_, err = ch.QueueDeclare(config.QueueName, true, false, false, true, nil)
 	if err != nil {
-		logger.Fatalf("failed to connect to RabbitMQ: %+v", err)
+		logger.Errorf("failed to declare RMQ queue: %+v", err)
+		return nil, err
 	}
 
-	return &rabbitMQ{config: config, logger: logger, conn: conn, ch: ch}
+	return &rabbitMQ{config: config, logger: logger, conn: conn, ch: ch}, nil
 }
 
 func (r *rabbitMQ) Close() {
