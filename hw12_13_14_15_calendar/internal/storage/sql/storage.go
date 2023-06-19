@@ -172,11 +172,6 @@ func (s *sqlStorage) GetEvensToNotify(limit int) ([]*storage.Event, error) {
 		events = append(events, event)
 	}
 
-	if err != nil {
-		s.logger.Errorf("can not get events: %+v", err)
-		return nil, err
-	}
-
 	return events, nil
 }
 
