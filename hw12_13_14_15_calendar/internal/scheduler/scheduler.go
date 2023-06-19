@@ -7,7 +7,7 @@ import (
 	"github.com/adrevin/ogdphw/hw12_13_14_15_calendar/internal/storage"
 )
 
-const EvensRequestLimit = 10
+const evensRequestLimit = 10
 
 type Scheduler struct {
 	logger  logger.Logger
@@ -27,7 +27,7 @@ func New(
 }
 
 func (s *Scheduler) Scan() error {
-	events, err := s.storage.GetEvensToNotify(EvensRequestLimit)
+	events, err := s.storage.GetEvensToNotify(evensRequestLimit)
 	if err != nil {
 		return err
 	}
