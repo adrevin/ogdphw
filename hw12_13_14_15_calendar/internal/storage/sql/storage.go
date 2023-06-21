@@ -153,6 +153,59 @@ func (s *sqlStorage) MonthEvens(t time.Time) ([]*storage.Event, error) {
 	return events, nil
 }
 
+func (s *sqlStorage) GetEvensToNotify(limit int) ([]*storage.Event, error) {
+	query := `select id, title, time, user_id from events where notified_at is null limit $1`
+
+	rows, err := s.db.Query(query, limit)
+	if err != nil {
+		s.logger.Errorf("can not get events: %+v", err)
+		return nil, err
+	}
+
+	events := make([]*storage.Event, 0)
+	for rows.Next() {
+		event := &storage.Event{}
+		err := rows.Scan(&event.ID, &event.Title, &event.Time, &event.UserID)
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, event)
+	}
+
+	return events, nil
+}
+
+func (s *sqlStorage) SetEvenIsNotified(eventID uuid.UUID) error {
+	exec, err := s.db.Exec("update events set notified_at=$1 where id=$2", time.Now(), eventID)
+	if err != nil {
+		s.logger.Errorf("can not update event: %+v", err)
+		return err
+	}
+	result, err := exec.RowsAffected()
+	if err != nil {
+		s.logger.Errorf("can not get rows affected : %+v", err)
+		return err
+	}
+	if result == 0 {
+		s.logger.Errorf("can not update row. row not found", err)
+		return storage.ErrEventNotFound
+	}
+	return nil
+}
+
+func (s *sqlStorage) Clean(duration time.Duration) (int64, error) {
+	max := time.Now().Add(-duration)
+	r, err := s.db.Exec("delete from events where time < $1", max)
+	if err != nil {
+		return 0, err
+	}
+	affected, err := r.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+	return affected, nil
+}
+
 func getEvents(rows *sql.Rows) ([]*storage.Event, error) {
 	events := make([]*storage.Event, 0)
 	for rows.Next() {
