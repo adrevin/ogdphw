@@ -1,6 +1,6 @@
 FROM golang:1.20 as build
 
-ENV BIN_FILE /opt/calendar/scheduler-app
+ENV BIN_FILE /opt/scheduler/scheduler-app
 ENV CODE_DIR /go/src/
 
 WORKDIR ${CODE_DIR}
@@ -20,10 +20,11 @@ LABEL ORGANIZATION="OTUS Online Education"
 LABEL SERVICE="scheduler"
 LABEL MAINTAINERS="student@otus.ru"
 
-ENV BIN_FILE "/opt/calendar/scheduler-app"
+ENV BIN_FILE "/opt/scheduler/scheduler-app"
 COPY --from=build ${BIN_FILE} ${BIN_FILE}
 
-ENV CONFIG_FILE /etc/calendar/config.yml
-COPY ./configs/config.yml ${CONFIG_FILE}
+ENV CONFIG_FILE /etc/scheduler/config.yml
+COPY --from=build /go/src/configs/config.yml ${CONFIG_FILE}
+
 
 CMD ${BIN_FILE} -config ${CONFIG_FILE}

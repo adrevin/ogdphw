@@ -1,0 +1,49 @@
+version: '3.1'
+
+services:
+
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_DB: "hw15"
+      POSTGRES_USER: "hw15"
+      POSTGRES_PASSWORD: "hw15"
+    ports:
+      - "6432:5432"
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: hw15
+      RABBITMQ_DEFAULT_PASS: hw15
+    ports:
+      - "15673:15672"
+      - "5673:5672"
+
+  calendar:
+    restart: always
+    build:
+      context: ../.
+      dockerfile: build/calendar/Dockerfile
+    ports:
+      - "5000:5000"
+      - "5001:5001"
+    depends_on:
+      - postgres
+
+  sheduler:
+    restart: always
+    build:
+      context: ../.
+      dockerfile: build/scheduler/Dockerfile
+    depends_on:
+      - postgres
+      - rabbitmq
+
+  sender:
+    restart: always
+    build:
+      context: ../.
+      dockerfile: build/sender/Dockerfile
+    depends_on:
+      - rabbitmq

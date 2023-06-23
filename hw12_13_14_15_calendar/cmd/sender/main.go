@@ -42,7 +42,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	defer cancel()
 
-	logger.Debugf("sender started")
+	logger.Infof("sender started")
 	err = rmq.ConsumeNotifications(
 		ctx,
 		func(notification *mq.Notification) bool {
@@ -53,5 +53,5 @@ func main() {
 		logger.Errorf("consuming error", "%+v", err)
 	}
 
-	logger.Debugf("sender stopped")
+	logger.Infof("sender stopped")
 }

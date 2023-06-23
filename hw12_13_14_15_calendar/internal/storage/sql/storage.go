@@ -247,16 +247,15 @@ func MigrateDatabase(config configuration.StorageConfiguration, logger logger.Lo
 		return
 	}
 
-	wd, err := os.Getwd()
+	ex, err := os.Executable()
 	if err != nil {
-		logger.Fatalf("can not get wd: %+v", err)
+		logger.Fatalf("can not get executable: %+v", err)
 		return
 	}
-
-	migrationsDir := path.Join(wd, "migrations")
+	migrationsDir := path.Join(path.Dir(ex), "migrations")
 	files, err := os.ReadDir(migrationsDir)
 	if err != nil {
-		logger.Fatalf("can not read dir: %+v", err)
+		logger.Fatalf("can not read dir %s: %+v", migrationsDir, err)
 		return
 	}
 

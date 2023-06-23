@@ -32,7 +32,9 @@ func (s *Scheduler) Scan() error {
 		return err
 	}
 
-	s.logger.Debugf("received %d events to notify", len(events))
+	if len(events) > 0 {
+		s.logger.Debugf("received %d events to notify", len(events))
+	}
 	for _, event := range events {
 		notification := &mq.Notification{ID: event.ID, Title: event.Title, Time: event.Time, UserID: event.UserID}
 

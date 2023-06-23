@@ -30,13 +30,13 @@ grpcServer:
     timeout: 1s
 storage:
   usePostgres: true
-  postgresConnection: "postgres://hw15:hw15@localhost:5432/hw15?sslmode=disable"
+  postgresConnection: "postgres://hw15:hw15@postgres:5432/hw15?sslmode=disable"
 scheduler:
   scanDelay: 1s
   cleanDelay: 60m
   cleanOlderThan: 24h
 messageQueue:
-  brokerUri: amqp://127.0.0.1:5672
+  brokerUri: "amqp://hw15:hw15@rabbitmq:5672"
   queueName: EVENT_NOTIFICATION
   publishTimeout: 1s
 
