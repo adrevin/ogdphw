@@ -45,7 +45,7 @@ down:
 	docker compose -f ./deployments/docker-compose.yml down
 
 tests:
-	go test ./integration/. -v -count=1 -tags=integration
+	go test ./integration/. -v -count=1 -tags=integration_tests
 
 integration-tests:up tests down
 
