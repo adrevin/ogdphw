@@ -38,4 +38,15 @@ lint: install-lint-deps
 generate:
 	go generate ./internal/server/grpc/.
 
+up:
+	docker compose -f ./deployments/docker-compose.yml up -d --remove-orphans
+
+down:
+	docker compose -f ./deployments/docker-compose.yml down
+
+tests:
+	go test ./integration/. -v -count=1 -tags=integration
+
+integration-tests:up tests down
+
 .PHONY: build run build-img run-img version test lint

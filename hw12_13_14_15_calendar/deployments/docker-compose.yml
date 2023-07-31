@@ -31,7 +31,7 @@ services:
     depends_on:
       - postgres
 
-  sheduler:
+  scheduler:
     restart: always
     build:
       context: ../.
