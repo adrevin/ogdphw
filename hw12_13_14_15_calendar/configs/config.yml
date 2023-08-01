@@ -31,7 +31,6 @@ grpcServer:
 storage:
   usePostgres: true
   postgresConnection: "postgres://hw15:hw15@postgres:5432/hw15?sslmode=disable"
-  #postgresConnection: "postgres://hw12:hw12@localhost:5432/hw12?sslmode=disable"
 scheduler:
   scanDelay: 1s
   cleanDelay: 60m
