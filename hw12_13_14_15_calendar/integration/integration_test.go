@@ -29,6 +29,16 @@ func TestServerIsOnline(t *testing.T) {
 	})
 }
 
+func TestCleanTestResults(t *testing.T) {
+	resp, err := client.Get(eventsApi + "month/2024-01-01") //nolint:noctx
+	CheckResponse(t, resp, err)
+	responseEvents := GetResponseEvents(t, resp)
+	resp.Body.Close()
+	for _, event := range responseEvents {
+		DeleteEvent(t, event.ID.String())
+	}
+}
+
 var userID *uuid.UUID
 var eventRequest *internalhttp.EventRequest
 var eventID *uuid.UUID
@@ -93,6 +103,7 @@ func TestGetEvents(t *testing.T) {
 		resp.Body.Close()
 	})
 }
+
 func TestUpdateEvent(t *testing.T) {
 	t.Run("update event", func(t *testing.T) {
 		newUserID, err := uuid.NewUUID()
@@ -137,8 +148,6 @@ func TestDeleteEvent(t *testing.T) {
 	})
 }
 
-var lastTestEvents []internalhttp.EventResponse
-
 func TestDayWeekMonthLogic(t *testing.T) {
 	t.Run("post test events", func(t *testing.T) {
 		userID, err := uuid.NewUUID()
@@ -172,14 +181,9 @@ func TestDayWeekMonthLogic(t *testing.T) {
 		responseEvents = GetResponseEvents(t, resp)
 		require.Equal(t, 5, len(responseEvents))
 		resp.Body.Close()
-		lastTestEvents = responseEvents
 	})
 }
-func TestCleanTestResults(t *testing.T) {
-	for _, event := range lastTestEvents {
-		DeleteEvent(t, event.ID.String())
-	}
-}
+
 func DeleteEvent(t *testing.T, eventID string) { //nolint:thelper
 	req, err := http.NewRequest(http.MethodDelete, eventsApi+eventID, nil)
 	require.NoError(t, err)

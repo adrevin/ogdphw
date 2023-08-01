@@ -29,7 +29,8 @@ services:
       - "5000:5000"
       - "5001:5001"
     depends_on:
-      - postgres
+      - scheduler
+      - sender
 
   scheduler:
     restart: always
@@ -46,4 +47,5 @@ services:
       context: ../.
       dockerfile: build/sender/Dockerfile
     depends_on:
+      - postgres
       - rabbitmq

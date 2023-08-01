@@ -16,4 +16,5 @@ type Storage interface {
 	GetEvensToNotify(limit int) ([]*Event, error)
 	SetEvenIsNotified(uuid.UUID) error
 	Clean(olderThan time.Duration) (int64, error)
+	RegisterNotification(notificationID uuid.UUID, userID uuid.UUID, event string) error
 }

@@ -287,3 +287,9 @@ func MigrateDatabase(config configuration.StorageConfiguration, logger logger.Lo
 		logger.Debugf("applied migration '%s'", fileName)
 	}
 }
+
+func (s *sqlStorage) RegisterNotification(notificationID uuid.UUID, userID uuid.UUID, event string) error {
+	command := "insert into notifications (notification_id, user_id, event) values ($1, $2, $3)"
+	_, err := s.db.Exec(command, notificationID, userID, event)
+	return err
+}
