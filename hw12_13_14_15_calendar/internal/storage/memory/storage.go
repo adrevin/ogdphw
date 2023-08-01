@@ -175,3 +175,7 @@ func weekKey(t time.Time) time.Time {
 	year, week := isoweek.FromDate(t.Year(), t.Month(), t.Day())
 	return isoweek.StartTime(year, week, t.Location())
 }
+
+func (l memStorage) RegisterNotification(_ uuid.UUID, _ uuid.UUID, _ string) error {
+	return storage.ErrNotImplemented
+}

@@ -45,7 +45,7 @@ func (s *sqlStorage) Create(event *storage.Event) (uuid.UUID, error) {
 values ($1, $2, $3, $4, $5, $6, $7)
 returning id`
 
-	event.Time = event.Time.Truncate(time.Second)
+	// event.Time = event.Time.Truncate(time.Second)
 	var id *uuid.UUID
 	row := s.db.QueryRow(
 		command,
@@ -247,16 +247,15 @@ func MigrateDatabase(config configuration.StorageConfiguration, logger logger.Lo
 		return
 	}
 
-	wd, err := os.Getwd()
+	ex, err := os.Executable()
 	if err != nil {
-		logger.Fatalf("can not get wd: %+v", err)
+		logger.Fatalf("can not get executable: %+v", err)
 		return
 	}
-
-	migrationsDir := path.Join(wd, "migrations")
+	migrationsDir := path.Join(path.Dir(ex), "migrations")
 	files, err := os.ReadDir(migrationsDir)
 	if err != nil {
-		logger.Fatalf("can not read dir: %+v", err)
+		logger.Fatalf("can not read dir %s: %+v", migrationsDir, err)
 		return
 	}
 
@@ -287,4 +286,10 @@ func MigrateDatabase(config configuration.StorageConfiguration, logger logger.Lo
 		}
 		logger.Debugf("applied migration '%s'", fileName)
 	}
+}
+
+func (s *sqlStorage) RegisterNotification(notificationID uuid.UUID, userID uuid.UUID, event string) error {
+	command := "insert into notifications (notification_id, user_id, event) values ($1, $2, $3)"
+	_, err := s.db.Exec(command, notificationID, userID, event)
+	return err
 }
