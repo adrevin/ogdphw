@@ -45,7 +45,7 @@ func (s *sqlStorage) Create(event *storage.Event) (uuid.UUID, error) {
 values ($1, $2, $3, $4, $5, $6, $7)
 returning id`
 
-	event.Time = event.Time.Truncate(time.Second)
+	// event.Time = event.Time.Truncate(time.Second)
 	var id *uuid.UUID
 	row := s.db.QueryRow(
 		command,

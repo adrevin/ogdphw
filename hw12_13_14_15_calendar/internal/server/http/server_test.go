@@ -93,7 +93,7 @@ func TestServer(t *testing.T) {
 		require.Equal(t, eventRequest.Title, events[0].Title)
 		require.Equal(t, eventRequest.Time, events[0].Time)
 		require.Equal(t, eventRequest.UserID, events[0].UserID)
-		require.Equal(t, time.Duration(eventRequest.Duration), events[0].Duration)
+		require.Equal(t, time.Duration(eventRequest.Duration)*time.Second, events[0].Duration)
 
 		// update
 		updateRequest := EventRequest{
@@ -132,7 +132,7 @@ func TestServer(t *testing.T) {
 		require.Equal(t, updateRequest.Title, events[0].Title)
 		require.Equal(t, updateRequest.Time, events[0].Time)
 		require.Equal(t, updateRequest.UserID, events[0].UserID)
-		require.Equal(t, time.Duration(updateRequest.Duration), events[0].Duration)
+		require.Equal(t, time.Duration(updateRequest.Duration)*time.Second, events[0].Duration)
 
 		// delete
 		req, err = http.NewRequest( //nolint:noctx
